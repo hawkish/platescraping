@@ -1,5 +1,5 @@
 
-import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), sections)
+import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText)
 import Network.HTTP (getResponseBody, getRequest, simpleHTTP, urlEncode)
 import Control.Exception
 
@@ -13,6 +13,7 @@ findDivs a = filter (~== TagOpen "div" [("class","pairValue")]) (parseTags a)
 --fDivs :: String -> [Tag String]
 fDivs a = sections (~== "<div class=\"pairValue\">") (parseTags a)
 
+getText a = fromTagText (dropWhile (~/= "<div class=\"pairValue\">") a !! 1)
 
 getRegNumber :: String -> IO String
 getRegNumber a = do
