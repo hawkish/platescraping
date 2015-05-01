@@ -1,0 +1,11 @@
+name:              licenseplate
+version:           1.0
+Build-Type:        Simple
+cabal-version:     >= 1.2
+
+executable licenseplate
+  main-is:         Main.hs
+  hs-source-dirs:  src
+  build-depends:   base>=4.8
+                 , tagsoup==0.13.3
+                 , HTTP==4000.2.19
