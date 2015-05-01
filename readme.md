@@ -1,7 +1,7 @@
 Plate Scraping
 ==============
 
-This is an attempt to screen scrape trafikstyrelsen.dk and tinglysning.dk for licence plate information.
+This is a hopefully not futile attempt to screenscrape the danish sites trafikstyrelsen.dk and tinglysning.dk for licence plate information.
 
 I'm using Haskell and TagSoup for the job.
 
