@@ -28,11 +28,13 @@ first a = head a
 -- This approach will fail if the tagsoup contains more than one VIN.
 parse :: String -> [String]
 parse a = filter isValid candidates
-          where candidates = getCandidates a
+          where candidates = getTagTexts a
 
--- Refine candidates from the HTML soup. Yeah, it's a convoluted process...
-getCandidates :: String -> [String]
-getCandidates a = dequote $ map f $ filter isTagText (parseTags a)
+
+
+-- Take all relevant tagTexts from the HTML soup. Yeah, it's a convoluted process...
+getTagTexts :: String -> [String]
+getTagTexts a = dequote $ map f $ filter isTagText (parseTags a)
   where f = unwords . words . fromTagText
         dequote = filter (not . null)
 
