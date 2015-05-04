@@ -8,23 +8,33 @@ import Data.List
 import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as L
 
--- Get VIN from trafikstyrelsen.
+
+t = "<div class=\"horizontalSplitter\"></div>\r\n\r\n        <div class=\"floatLeft grid5\">\r\n            <h2>K\195\184ret\195\184j</h2>\r\n            \r\n            <div id=\"ctl00_m_g_4156985a_4cd3_409b_aab5_4416025b40bb_ctl00_pnlVehicleInfo\">\r\n\t\t\t\t\t\t\r\n            <div class=\"pairName\">M\195\166rke</div>\r\n            <div class=\"pairValue\">AUDI</div>\r\n            <div class=\"pairName\">Model</div>\r\n            <div class=\"pairValue\">A3</div>\r\n            <div class=\"pairName\">Stelnummer</div>\r\n            <div class=\"pairValue\">WAUZZZ8P2AA090943</div>\r\n            <div class=\"pairName\">Seneste reg.nr.</div>\r\n            <div class=\"pairValue\">AM32511</div>\r\n            \r\n            \r\n\t\t\t\t\t</div>\r\n            <div class=\"clear\"></div><br /><br />\r\n        </div>\r\n        <div class=\"floatRight grid7\">\r\n"
+
+-- Get HTML from trafikstyrelsen.
 getVIN :: String -> IO String
 getVIN a = do
   let url = "http://selvbetjening.trafikstyrelsen.dk/Sider/resultater.aspx?Reg=" ++ urlEncode a
-  result <- try $ getHTML url :: IO (Either SomeException String)
+  result <- try $ doGetRequest url :: IO (Either SomeException String)
   case result of
    Left ex -> return $ show ex
-   Right html -> return $ getVIN' html
-
--- We're assuming that we're looking for a VIN, so filter the candidates for one.
--- This approach will fail if the tagsoup contains more than one VIN.
-getVIN' :: String -> String
-getVIN' a = first $ filter isValid (getVINCandidates a)
+   Right html -> return $ first $ parse $ html
 
 first :: [String] -> String
 first [] = "No VIM found. Or the parser failed."
 first a = head a
+
+-- We're assuming that we're looking for a VIN, so filter the candidates for one.
+-- This approach will fail if the tagsoup contains more than one VIN.
+parse :: String -> [String]
+parse a = filter isValid candidates
+          where candidates = getCandidates a
+
+-- Refine candidates from the HTML soup. Yeah, it's a convoluted process...
+getCandidates :: String -> [String]
+getCandidates a = dequote $ map f $ filter isTagText (parseTags a)
+  where f = unwords . words . fromTagText
+        dequote = filter (not . null)
 
 -- Validator for VIN.
 isValid :: String -> Bool
@@ -36,14 +46,8 @@ isDigitOrUpperLetter a
   | isLetter a && isUpper a = True
   | otherwise = False
 
--- Refine candidates from the HTML soup. Yeah, it's a convoluted process...
-getVINCandidates :: String -> [String]
-getVINCandidates a = dequote $ map f $ filter isTagText (parseTags a)
-  where f = unwords . words . fromTagText
-        dequote = filter (not . null)
-
-getHTML :: String -> IO String
-getHTML url = do
+doGetRequest :: String -> IO String
+doGetRequest url = do
   resp <- simpleHTTP $ getRequest $ url
   html <- getResponseBody resp
   return html
