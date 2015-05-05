@@ -39,13 +39,14 @@ getTagTexts a = dequote $ map f $ filter isTagText (parseTags a)
         dequote = filter (not . null)
 
 -- Validator for VIN.
+-- http://en.wikipedia.org/wiki/Vehicle_identification_number
 isValid :: String -> Bool
 isValid a = length a == 17 && (and $ map isDigitOrUpperLetter a)
 
 isDigitOrUpperLetter :: Char -> Bool
 isDigitOrUpperLetter a
   | isDigit a = True 
-  | isLetter a && isUpper a = True
+  | isLetter a && isUpper a && a /= 'Q' && a /= 'O' && a /= 'I' = True
   | otherwise = False
 
 getHTML :: String -> IO (Either SomeException String)
