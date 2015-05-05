@@ -23,11 +23,16 @@ first :: [String] -> String
 first [] = "No VIM found. Or the parser failed."
 first a = head a
 
--- We're assuming that we're looking for a VIN, so filter the candidates for one.
--- This approach will fail if the tagsoup contains more than one VIN.
+following :: (Eq a) => a -> [a] -> [a]
+following _ [] = []
+following x (y:l) = if x==y then l else following x l
+
+-- We're assuming, that we're looking for a VIN, so filter the tagtexts for one.
+-- Also I'm excluding all tagtexts *before* "Stelnummer" as candidates.
+-- - hoping that a VIN is present immediately *after* "Stelnummer" (but not counting on it).
 parse :: String -> [String]
 parse a = filter isValid candidates
-          where candidates = getTagTexts a
+          where candidates = following "Stelnummer" $ getTagTexts a
 
 -- Take all relevant tagTexts from the HTML soup. Yeah, it's a convoluted process...
 getTagTexts :: String -> [String]
