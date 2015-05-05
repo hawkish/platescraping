@@ -14,8 +14,7 @@ t = "<div class=\"horizontalSplitter\"></div>\r\n\r\n        <div class=\"floatL
 -- Get HTML from trafikstyrelsen.
 getVIN :: String -> IO String
 getVIN a = do
-  let url = "http://selvbetjening.trafikstyrelsen.dk/Sider/resultater.aspx?Reg=" ++ urlEncode a
-  result <- try $ doGetRequest url :: IO (Either SomeException String)
+  result <- getHTML a
   case result of
    Left ex -> return $ show ex
    Right html -> return $ first $ parse $ html
@@ -29,8 +28,6 @@ first a = head a
 parse :: String -> [String]
 parse a = filter isValid candidates
           where candidates = getTagTexts a
-
-
 
 -- Take all relevant tagTexts from the HTML soup. Yeah, it's a convoluted process...
 getTagTexts :: String -> [String]
@@ -47,6 +44,12 @@ isDigitOrUpperLetter a
   | isDigit a = True 
   | isLetter a && isUpper a = True
   | otherwise = False
+
+getHTML :: String -> IO (Either SomeException String)
+getHTML a = do
+  let url = "http://selvbetjening.trafikstyrelsen.dk/Sider/resultater.aspx?Reg=" ++ urlEncode a
+  result <- try $ doGetRequest url :: IO (Either SomeException String)
+  return result
 
 doGetRequest :: String -> IO String
 doGetRequest url = do
