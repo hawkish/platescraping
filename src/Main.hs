@@ -21,18 +21,11 @@ first :: [String] -> String
 first [] = "No VIM found. Or the parser failed."
 first a = head a
 
---following :: (Eq a) => a -> [a] -> [a]
---following _ [] = []
---following x (y:l) = if x==y then l else following x l
-
 following :: Eq a => a -> [a] -> [a]
 following a b =
   case elemIndex a b of
     Just i -> drop i b
     Nothing -> b
-
---following :: (Eq a) => a -> [a] -> [a]
---following n l = drop (indexOfElem n l) l
 
 -- We're assuming, that we're looking for a VIN, so filter the tagtexts for valid ones.
 -- Also we're only including all tagtexts *after* "Stelnummer" as candidates.
