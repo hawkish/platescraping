@@ -104,13 +104,12 @@ parseHTMLTinglysning :: String -> String
 parseHTMLTinglysning a = firstMaybe $ filter isPfmPresent candidates
           where candidates = getTagTexts a
 --}
-{--
-getAction :: String -> String
-getAction a = if isTagOpen result
-               then fromAttrib "action" result
-               else ""
-                    where
---}
+
+getAction :: String -> Maybe String
+getAction a = case getForm a of
+               Nothing -> Nothing
+               Just result -> Just (fromAttrib "action" result)
+
 getForm :: String -> Maybe (Tag String)
 getForm a = firstMaybe $ filter (isTagOpenName "form") (parseTags a)
 
