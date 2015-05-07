@@ -1,39 +1,50 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 
-import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, isTagText)
+import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
 import Network.HTTP (getResponseBody, getRequest, simpleHTTP, urlEncode)
 import Network.HTTP.Conduit
 import Control.Exception
-import Data.List
+import Data.List 
 import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as L
+--import qualified Data.ByteString.Char8
 
+
+
+t = "<div class=\"horizontalSplitter\"></div>\r\n\r\n        <div class=\"floatLeft grid5\">\r\n            <h2>K\195\184ret\195\184j</h2>\r\n            \r\n            <div id=\"ctl00_m_g_4156985a_4cd3_409b_aab5_4416025b40bb_ctl00_pnlVehicleInfo\">\r\n\t\t\t\t\t\t\r\n            <div class=\"pairName\">M\195\166rke</div>\r\n            <div class=\"pairValue\">AUDI</div>\r\n            <div class=\"pairName\">Model</div>\r\n            <div class=\"pairValue\">A3</div>\r\n            <div class=\"pairName\">Stelnummer</div>\r\n            <div class=\"pairValue\">WAUZZZ8P2AA090943</div>\r\n            <div class=\"pairName\">Seneste reg.nr.</div>\r\n            <div class=\"pairValue\">AM32511</div>\r\n            \r\n            \r\n\t\t\t\t\t</div>\r\n            <div class=\"clear\"></div><br /><br />\r\n        </div>\r\n        <div class=\"floatRight grid7\">\r\n"
+
+n = "<form id=\"j_id4\" name=\"j_id4\" style=\"margin:0px\" method=\"POST\" onkeypress=\"return _submitOnEnter(event,'j_id4');\" action=\"/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=SlEuMoHouvqLGdJ_fICGH8lzaDjd6tNZ0WKFdKJ6vHtRHb7o3ZOj!1927900994!-478567563?_afPfm=-1bav6tyn4e\">\n\n&#9;<div class=\"container-logotop\">\n    <script type=\"text/javascript\" src=\"/tinglysning/js/helptext.js\"></script>\n    <script type=\"text/javascript\" src=\"/tinglysning/js/utils.js\"></script>\n"
 
 -- Get HTML from trafikstyrelsen.
 getVIN :: String -> IO String
 getVIN a = do
-  result <- getHTML a
+  result <- getHTMLTrafikStyrelsen a
   case result of
    Left ex -> return $ show ex
-   Right html -> return $ parse $ html
-
-first :: [String] -> String
-first [] = "No VIM found. Or the parser failed."
-first a = head a
-
-following :: Eq a => a -> [a] -> [a]
-following a b =
-  case elemIndex a b of
-    Just i -> drop i b
-    Nothing -> b
+   Right html -> case parseHTMLTrafikstyrelsen html of
+                  Nothing -> return "Nothing found. Or the parser failed."
+                  Just result -> return result
 
 -- We're assuming, that we're looking for a VIN, so filter the tagtexts for valid ones.
 -- Also we're only including all tagtexts *after* "Stelnummer" as candidates.
 -- In fact we're hoping that the relevant VIN is present immediately *after* "Stelnummer"
 -- - but not counting on it. And any other VINs are excluded by first.
-parse :: String -> String
-parse a = first $ filter isValid candidates
+parseHTMLTrafikstyrelsen :: String -> Maybe String
+parseHTMLTrafikstyrelsen a = firstMaybe $ filter isValid candidates
           where candidates = following "Stelnummer" $ getTagTexts a
+
+firstMaybe :: [a] -> Maybe a
+firstMaybe [] = Nothing
+firstMaybe a = Just $ head a
+
+following :: Eq a => a -> [a] -> [a]
+following a b =
+  case elemIndex a b of
+   Nothing -> b
+   Just index -> if result == [] then b else result
+                                         where result = drop (index+1) b
+
 
 -- Take all relevant tagTexts from the HTML soup. Yeah, it's a convoluted process...
 getTagTexts :: String -> [String]
@@ -52,8 +63,8 @@ isDigitOrUpperLetter a
   | isLetter a && isUpper a && a /= 'Q' && a /= 'O' && a /= 'I' = True
   | otherwise = False
 
-getHTML :: String -> IO (Either SomeException String)
-getHTML a = do
+getHTMLTrafikStyrelsen :: String -> IO (Either SomeException String)
+getHTMLTrafikStyrelsen a = do
   let url = "http://selvbetjening.trafikstyrelsen.dk/Sider/resultater.aspx?Reg=" ++ urlEncode a
   result <- try $ doGetRequest url :: IO (Either SomeException String)
   return result
@@ -76,16 +87,50 @@ doGetRequest url = do
 --_noJavaScript:false
 --javax.faces.ViewState:!-pwa1crud3
 --source:content:center:bilbogen:j_id150
+-- "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
+-- "https://www.tinglysning.dk/tinglysning/common/visdokument/visdokument.xhtml?_afPfm=1avzjdqz5s"
 
-getHTMLTLS = do
-  req0 <- parseUrl "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
+-- Get HTML from trafikstyrelsen.
+{--
+getTinglysning :: IO (String)
+getTinglysning = do
+  result <- getHTMLTinglysning
+  case result of
+   Left ex -> return $ show ex
+   Right html -> return $ parseHTMLTinglysning html
+--}
+{--
+parseHTMLTinglysning :: String -> String
+parseHTMLTinglysning a = firstMaybe $ filter isPfmPresent candidates
+          where candidates = getTagTexts a
+--}
+{--
+getAction :: String -> String
+getAction a = if isTagOpen result
+               then fromAttrib "action" result
+               else ""
+                    where
+--}
+getForm :: String -> Maybe (Tag String)
+getForm a = firstMaybe $ filter (isTagOpenName "form") (parseTags a)
+
+--isPfmPresent :: Text -> Text -> Bool
+isPfmPresent a = isInfixOf "_afPfm=" a
+
+getHTMLTinglysning :: IO (Either SomeException String)
+getHTMLTinglysning = do
+  let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
+  result <- try $ doGetRequest_C url :: IO (Either SomeException String)
+  return result
+
+
+doGetRequest_C :: String -> IO String
+doGetRequest_C url = do
+  req0 <- parseUrl url
   let req = req0 {
-        --method = methodPost
         requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]
-                                  --, requestBody = RequestBodyLBS "{\"longUrl\": \"http://www.google.com/\"}"
         }
-
-  res <- withManager $ httpLbs req
-  L.putStrLn $ responseBody res
+  resp <- withManager $ httpLbs req
+  return $ L.unpack $ responseBody resp
   
 
