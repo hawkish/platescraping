@@ -11,3 +11,4 @@ executable licenseplate
                  , HTTP==4000.2.19
                  , http-conduit==2.1.5
                  , bytestring==0.10.6.0
+                 , split==0.1.2.3
