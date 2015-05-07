@@ -91,19 +91,15 @@ doGetRequest url = do
 -- "https://www.tinglysning.dk/tinglysning/common/visdokument/visdokument.xhtml?_afPfm=1avzjdqz5s"
 
 -- Get HTML from trafikstyrelsen.
-{--
+
 getTinglysning :: IO (String)
 getTinglysning = do
   result <- getHTMLTinglysning
   case result of
    Left ex -> return $ show ex
-   Right html -> return $ parseHTMLTinglysning html
---}
-{--
-parseHTMLTinglysning :: String -> String
-parseHTMLTinglysning a = firstMaybe $ filter isPfmPresent candidates
-          where candidates = getTagTexts a
---}
+   Right html -> case getAction html of
+                  Nothing -> return "Nothing found. Or the parser failed."
+                  Just result -> return result
 
 getAction :: String -> Maybe String
 getAction a = case getForm a of
