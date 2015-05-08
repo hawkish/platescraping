@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
-import Network.HTTP (getResponseBody, getRequest, simpleHTTP, urlEncode)
 import Network.HTTP.Conduit
 import Control.Exception
 import Data.List
