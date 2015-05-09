@@ -8,29 +8,13 @@ import Data.List
 import Data.List.Split
 import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as L
---import qualified Data.ByteString.Char8
+import Utils (firstMaybe, following, getParameters)
 
 
 
 n = "<form id=\"j_id4\" name=\"j_id4\" style=\"margin:0px\" method=\"POST\" onkeypress=\"return _submitOnEnter(event,'j_id4');\" action=\"/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=SlEuMoHouvqLGdJ_fICGH8lzaDjd6tNZ0WKFdKJ6vHtRHb7o3ZOj!1927900994!-478567563?_afPfm=-1bav6tyn4e\">\n\n&#9;<div class=\"container-logotop\">\n    <script type=\"text/javascript\" src=\"/tinglysning/js/helptext.js\"></script>\n    <script type=\"text/javascript\" src=\"/tinglysning/js/utils.js\"></script>\n"
 
 h = "/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=E4gvjvzPV_6nECcCdeE8POCn_QtrIGoS0LU6---cO4zQBWaWw0bX!-478567563!1440987210?_afPfm=-11ykkgvvlm&some=234"
-
-firstMaybe :: [a] -> Maybe a
-firstMaybe [] = Nothing
-firstMaybe a = Just $ head a
-
-following :: Eq a => a -> [a] -> [a]
-following a b =
-  case elemIndex a b of
-   Nothing -> b
-   Just index -> if result == [] then b else result
-                                         where result = drop (index+1) b
-
-getParameters :: String -> [String]
-getParameters a = case firstMaybe . drop 1 $ splitOn "?" a of
-                   Nothing -> []
-                   Just result -> splitOn "&" result
 
 --soegemaade:content:center:bilbogen:stelnrOption
 --content:center:bilbogen:stelnr:WAUZZZ8P2AA090943
