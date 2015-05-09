@@ -29,7 +29,7 @@ getVIN a = do
 -- In fact we're hoping that the relevant VIN is present immediately *after* "Stelnummer"
 -- - but not counting on it. And any other VINs are excluded by first.
 parseHTMLTrafikstyrelsen :: String -> Maybe String
-parseHTMLTrafikstyrelsen a = firstMaybe . filter isValid . following "Stelnummer" $ getTagTexts a
+parseHTMLTrafikstyrelsen = firstMaybe . filter isValid . following "Stelnummer" . getTagTexts
 
 firstMaybe :: [a] -> Maybe a
 firstMaybe [] = Nothing
@@ -49,7 +49,7 @@ getParameters a = case firstMaybe . drop 1 $ splitOn "?" a of
 
 -- Take all relevant tagTexts from the HTML soup. Yeah, it's a convoluted process...
 getTagTexts :: String -> [String]
-getTagTexts a = dequote . map f . filter isTagText $ parseTags a
+getTagTexts = dequote . map f . filter isTagText . parseTags 
   where f = unwords . words . fromTagText
         dequote = filter (not . null)
 
