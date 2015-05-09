@@ -9,6 +9,10 @@ import Data.List.Split
 import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as L
 import Utils (firstMaybe, following, getParameters)
+import Control.Monad
+import Control.Monad.Trans
+import Control.Monad.List
+
 
 
 
@@ -31,31 +35,32 @@ h = "/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=E4gvjvzPV_6n
 
 -- Get HTML from trafikstyrelsen.
 
-getTinglysning :: IO (String)
-getTinglysning = do
+
+get_afPfm :: IO String
+get_afPfm = do
   result <- getHTMLTinglysning
   case result of
-   Left ex -> return $ show ex
-   Right html -> case getAction html of
-                  Nothing -> return "Nothing found. Or the parser failed."
-                  Just result -> return result
+   Nothing -> return "No found."
+   Just html -> return $ getAction html
 
+   
 getAction :: String -> Maybe String
-getAction a = case getForm a of
+getAction a = case firstMaybe $ filter (isTagOpenName "form") (parseTags a) of
                Nothing -> Nothing
                Just result -> Just (fromAttrib "action" result)
-
-getForm :: String -> Maybe (Tag String)
-getForm a = firstMaybe $ filter (isTagOpenName "form") (parseTags a)
 
 --isPfmPresent :: Text -> Text -> Bool
 isPfmPresent a = isInfixOf "_afPfm=" a
 
-getHTMLTinglysning :: IO (Either SomeException String)
+getHTMLTinglysning :: IO (Maybe String)
 getHTMLTinglysning = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
-  result <- try $ doGetRequest_C url :: IO (Either SomeException String)
-  return result
+  html <- try $ doGetRequest_C url :: IO (Either SomeException String)
+  case html of
+   Left ex -> do
+     putStrLn $ show ex
+     return Nothing
+   Right html -> return $ Just html
 
 
 doGetRequest_C :: String -> IO String
