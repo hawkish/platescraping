@@ -41,7 +41,11 @@ get_afPfm = do
   result <- getHTMLTinglysning
   case result of
    Nothing -> return "No found."
-   Just html -> return $ getAction html
+   Just html -> case getAction html of
+                 Nothing -> return "No found."
+                 Just r -> case firstMaybe $ getParameters r of
+                   Nothing -> return "no found."
+                   Just r2 -> return r2
 
    
 getAction :: String -> Maybe String
