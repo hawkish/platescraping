@@ -1,4 +1,4 @@
-module Utils (firstMaybe, following, getParameters) where
+module Utils (firstMaybe, following, getFirstParameter) where
 
 import Data.List.Split
 import Data.List
@@ -14,7 +14,18 @@ following a b =
    Just index -> if result == [] then b else result
                                          where result = drop (index+1) b
 
-getParameters :: String -> [String]
-getParameters a = case firstMaybe . drop 1 $ splitOn "?" a of
-                   Nothing -> []
-                   Just result -> splitOn "&" result
+getParametersAsString :: String -> Maybe String
+getParametersAsString a = firstMaybe . drop 1 $ splitOn "?" a
+
+getFirstParameter' :: String -> Maybe String
+getFirstParameter' a = firstMaybe $ splitOn "&" a
+
+-- Avoiding case expression ladder with Maybe Monad. 
+getFirstParameter :: String -> Maybe String
+getFirstParameter a = do
+  a1 <- getParametersAsString a
+  a2 <- getFirstParameter' a1
+  return a2
+
+
+

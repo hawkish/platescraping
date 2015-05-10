@@ -8,7 +8,7 @@ import Data.List
 import Data.List.Split
 import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as L
-import Utils (firstMaybe, following, getParameters)
+import Utils (firstMaybe, following, getFirstParameter)
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.List
@@ -36,17 +36,19 @@ h = "/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=E4gvjvzPV_6n
 -- Get HTML from trafikstyrelsen.
 
 
-get_afPfm :: IO String
+get_afPfm :: IO (Maybe String)
 get_afPfm = do
   result <- getHTMLTinglysning
   case result of
-   Nothing -> return "No found."
-   Just html -> case getAction html of
-                 Nothing -> return "No found."
-                 Just r -> case firstMaybe $ getParameters r of
-                   Nothing -> return "no found."
-                   Just r2 -> return r2
+   Nothing -> return Nothing
+   Just html -> return $ getParameter html
 
+-- Avoiding case expression ladder with Maybe Monad. 
+getParameter :: String -> Maybe String
+getParameter a = do
+   a1 <- getAction a
+   a2 <- getFirstParameter a1
+   return a2
    
 getAction :: String -> Maybe String
 getAction a = case firstMaybe $ filter (isTagOpenName "form") (parseTags a) of
