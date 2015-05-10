@@ -55,13 +55,10 @@ getAction a = case firstMaybe $ filter (isTagOpenName "form") (parseTags a) of
                Nothing -> Nothing
                Just result -> Just (fromAttrib "action" result)
 
---isPfmPresent :: Text -> Text -> Bool
-isPfmPresent a = isInfixOf "_afPfm=" a
-
 getHTMLTinglysning :: IO (Maybe String)
 getHTMLTinglysning = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
-  html <- try $ doGetRequest_C url :: IO (Either SomeException String)
+  html <- try $ doGetRequest url :: IO (Either SomeException String)
   case html of
    Left ex -> do
      putStrLn $ show ex
@@ -69,8 +66,8 @@ getHTMLTinglysning = do
    Right html -> return $ Just html
 
 
-doGetRequest_C :: String -> IO String
-doGetRequest_C url = do
+doGetRequest :: String -> IO String
+doGetRequest url = do
   req0 <- parseUrl url
   let req = req0 {
         requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]
