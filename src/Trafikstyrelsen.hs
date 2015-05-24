@@ -19,9 +19,8 @@ getVIN a = do
   result <- getHTMLTrafikStyrelsen a
   case result of
    Nothing -> return Nothing
-   Just html -> case parseHTMLTrafikstyrelsen html of
-                  Nothing -> return Nothing
-                  Just result -> return $ Just result
+   Just html -> return $ parseHTMLTrafikstyrelsen html
+
 
 -- We're assuming, that we're looking for a VIN, so filter the tagtexts for valid ones.
 -- Also we're only including all tagtexts *after* "Stelnummer" as candidates.
