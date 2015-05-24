@@ -15,6 +15,7 @@ import Control.Applicative
 -- Get the Identity monad from here:
 import Control.Monad.Identity (Identity)
 
+import Control.Applicative
 -- alias Parsec.parse for more concise usage.
 parse rule text = Parsec.parse rule "(source)" text
 
@@ -35,20 +36,40 @@ following a b =
 getParametersAsString :: String -> Maybe String
 getParametersAsString a = firstMaybe . drop 1 $ splitOn "?" a
 
+getParametersAsString2 :: Maybe String -> Maybe String
+getParametersAsString2 a =
+  case a of
+       Nothing -> Nothing
+       Just a -> firstMaybe . drop 1 $ splitOn "?" a
+
 getFirstParameter' :: String -> Maybe String
 getFirstParameter' a = firstMaybe $ splitOn "&" a
 
--- Avoiding case expression ladder with Maybe Monad. 
+getFirstParameter'2 :: Maybe String -> Maybe String
+getFirstParameter'2 a =
+  case a of
+   Nothing -> Nothing
+   Just a -> firstMaybe $ splitOn "&" a
+
+-- Avoiding case expression ladder with Functor. 
+getFirstParameter2 :: Maybe String -> Maybe String
+--getFirstParameter2 = fmap getFirstParameter'2 getParametersAsString2  
+getFirstParameter2 = getFirstParameter'2 <$> getParametersAsString2  
+
+
+-- Avoiding case expression ladder with Monad. 
 getFirstParameter :: String -> Maybe String
 getFirstParameter a = do
   a1 <- getParametersAsString a
   a2 <- getFirstParameter' a1
   return a2
 
+
 myParser :: Parsec.Parsec String () String
 myParser = do
   letters <- Parsec.many1 Parsec.letter
   return $ letters
+
 
 
 
