@@ -38,24 +38,25 @@ h = "/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=E4gvjvzPV_6n
 -- Get HTML from trafikstyrelsen.
 
 
-get_afPfm :: IO (Maybe String)
-get_afPfm = do
+getParameterAndCookie :: IO (Maybe (String, String))
+getParameterAndCookie = do
   response <- getHTMLTinglysning
   case response of
    Nothing -> return Nothing
-   Just html -> return $ get_afPfm' html
+   Just html -> return $ getParameterAndCookie' html
 
--- Avoiding case expression ladder with Maybe Monad. 
-get_afPfm' :: String -> Maybe String
-get_afPfm' a = do
-   a1 <- getAction' a
-   a2 <- getParameterAt a1 0
-   return a2
-   
-getAction' :: String -> Maybe String
-getAction' a = case firstMaybe $ filter (isTagOpenName "form") (parseTags a) of
+filterAction :: String -> Maybe String
+filterAction a = case firstMaybe $ filter (isTagOpenName "form") (parseTags a) of
                Nothing -> Nothing
                Just result -> Just (fromAttrib "action" result)
+
+-- Avoiding case expression ladder with Maybe Monad. 
+getParameterAndCookie' :: String -> Maybe (String, String)
+getParameterAndCookie' a = do
+   a1 <- filterAction a
+   a2 <- getParameterAt a1 0
+   a3 <- getCookie a1
+   return (a2, a3)
 
 getHTMLTinglysning :: IO (Maybe String)
 getHTMLTinglysning = do
@@ -69,17 +70,19 @@ getHTMLTinglysning = do
 
 postFormAtTinglysning :: IO (Maybe String)
 postFormAtTinglysning = do
-  _afPfm <- get_afPfm
-  case _afPfm of
+  parameterAndCookie <- getParameterAndCookie
+  case parameterAndCookie of
    Nothing -> return Nothing
-   Just _afPfm -> do
+   Just parameterAndCookie -> do
+     let _afPfm = fst parameterAndCookie
+     let cookie = snd parameterAndCookie
      let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml?" ++ _afPfm
      html <- try $ doPostRequest url "WAUZZZ8P2AA090943" :: IO (Either SomeException String)
      case html of
       Left ex -> do
         putStrLn $ show ex
         return Nothing
-      Right html -> return $ Just html
+      Right html -> return $ Just ""
                       
 
 
