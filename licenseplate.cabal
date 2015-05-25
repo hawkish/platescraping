@@ -10,6 +10,7 @@ executable licenseplate
                  , tagsoup==0.13.3
                  , HTTP==4000.2.19
                  , http-conduit==2.1.5
+                 , http-types==0.8.6
                  , bytestring==0.10.6.0
                  , split==0.1.2.3
                  , mtl==2.2.1

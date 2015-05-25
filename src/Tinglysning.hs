@@ -3,12 +3,14 @@
 
 import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
 import Network.HTTP.Conduit
+import Network.HTTP.Types.Header
 import Control.Exception
 import Data.List
 import Data.List.Split
 import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as L
-import Utils (firstMaybe, following, getFirstParameter)
+import qualified Data.ByteString.Char8 as B
+import Utils (firstMaybe, following, getParameterAt, getCookie)
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.List
@@ -38,20 +40,20 @@ h = "/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=E4gvjvzPV_6n
 
 get_afPfm :: IO (Maybe String)
 get_afPfm = do
-  result <- getHTMLTinglysning
-  case result of
+  response <- getHTMLTinglysning
+  case response of
    Nothing -> return Nothing
-   Just html -> return $ getParameter html
+   Just html -> return $ get_afPfm' html
 
 -- Avoiding case expression ladder with Maybe Monad. 
-getParameter :: String -> Maybe String
-getParameter a = do
-   a1 <- getAction a
-   a2 <- getFirstParameter a1
+get_afPfm' :: String -> Maybe String
+get_afPfm' a = do
+   a1 <- getAction' a
+   a2 <- getParameterAt a1 0
    return a2
    
-getAction :: String -> Maybe String
-getAction a = case firstMaybe $ filter (isTagOpenName "form") (parseTags a) of
+getAction' :: String -> Maybe String
+getAction' a = case firstMaybe $ filter (isTagOpenName "form") (parseTags a) of
                Nothing -> Nothing
                Just result -> Just (fromAttrib "action" result)
 
@@ -65,13 +67,49 @@ getHTMLTinglysning = do
      return Nothing
    Right html -> return $ Just html
 
+postFormAtTinglysning :: IO (Maybe String)
+postFormAtTinglysning = do
+  _afPfm <- get_afPfm
+  case _afPfm of
+   Nothing -> return Nothing
+   Just _afPfm -> do
+     let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml?" ++ _afPfm
+     html <- try $ doPostRequest url "WAUZZZ8P2AA090943" :: IO (Either SomeException String)
+     case html of
+      Left ex -> do
+        putStrLn $ show ex
+        return Nothing
+      Right html -> return $ Just html
+                      
+
 
 doGetRequest :: String -> IO String
 doGetRequest url = do
-  req0 <- parseUrl url
-  let req = req0 {
+  initReq <- parseUrl url
+  let req' = initReq { secure = True }
+  let req = req' {
         requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]
         }
+  resp <- withManager $ httpLbs req
+  return $ L.unpack $ responseBody resp
+  
+doPostRequest :: String -> String -> IO String
+doPostRequest url vin = do
+  initReq <- parseUrl url
+  let req' = initReq { secure = True
+                     , method = "POST"
+                     , requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]}
+  let req = urlEncodedBody [("soegemaade", "content:center:bilbogen:stelnrOption"),
+                            ("content:center:bilbogen:stelnr", B.pack(vin)),
+                            ("content:center:bilbogen:cvr", ""),
+                            ("content:center:bilbogen:navn", ""),
+                            ("content:center:bilbogen:foedselsdato", ""),
+                            ("bogsattest", "content:center:bilbogen:uofficiel"),
+                            ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
+                            ("_noJavaScript", "false"),
+                            ("javax.faces.ViewState","!-pwa1crud3"),
+                            ("source","content:center:bilbogen:j_id150")]
+                             req'
   resp <- withManager $ httpLbs req
   return $ L.unpack $ responseBody resp
   
