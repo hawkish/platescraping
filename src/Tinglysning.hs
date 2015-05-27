@@ -14,7 +14,9 @@ import Utils (firstMaybe, following, getParameterAt, getCookie)
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.List
-
+import Network
+import Data.Time.Clock
+import Data.Time.Calendar
 
 
 
@@ -77,12 +79,12 @@ postFormAtTinglysning = do
      let _afPfm = fst parameterAndCookie
      let cookie = snd parameterAndCookie
      let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml?" ++ _afPfm
-     html <- try $ doPostRequest url "WAUZZZ8P2AA090943" :: IO (Either SomeException String)
+     html <- try $ doPostRequest url cookie "WAUZZZ8P2AA090943" :: IO (Either SomeException String)
      case html of
       Left ex -> do
         putStrLn $ show ex
         return Nothing
-      Right html -> return $ Just ""
+      Right html -> return $ Just html
                       
 
 
@@ -95,12 +97,33 @@ doGetRequest url = do
         }
   resp <- withManager $ httpLbs req
   return $ L.unpack $ responseBody resp
+
+past :: UTCTime
+past = UTCTime (ModifiedJulianDay 56200) (secondsToDiffTime 0)
+
+future :: UTCTime
+future = UTCTime (ModifiedJulianDay 562000) (secondsToDiffTime 0)
+
+cookie :: String -> Cookie
+cookie value = Cookie { cookie_name = "TDK_JSESSIONID"
+                 , cookie_value = B.pack(value)
+                 , cookie_expiry_time = future
+                 , cookie_domain = ""
+                 , cookie_path = "/"
+                 , cookie_creation_time = past
+                 , cookie_last_access_time = past
+                 , cookie_persistent = False
+                 , cookie_host_only = False
+                 , cookie_secure_only = False
+                 , cookie_http_only = False
+                 }
   
-doPostRequest :: String -> String -> IO String
-doPostRequest url vin = do
+doPostRequest :: String -> String -> String -> IO String
+doPostRequest url cookie_value vin = do
   initReq <- parseUrl url
   let req' = initReq { secure = True
                      , method = "POST"
+                     , cookieJar = Just $ createCookieJar [cookie cookie_value] 
                      , requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]}
   let req = urlEncodedBody [("soegemaade", "content:center:bilbogen:stelnrOption"),
                             ("content:center:bilbogen:stelnr", B.pack(vin)),
