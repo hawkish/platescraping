@@ -55,7 +55,8 @@ getCookie :: String -> Maybe String
 getCookie a = do
   a1 <- firstMaybe . drop 1 $ splitOn ";" a
   a2 <- firstMaybe $ splitOn "?" a1
-  return a2
+  a3 <- firstMaybe . drop 1 $ splitOn "=" a2
+  return a3
                                 
 {--
 getParametersAsString2 :: Maybe String -> Maybe String

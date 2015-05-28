@@ -78,13 +78,15 @@ postFormAtTinglysning = do
    Just parameterAndCookie -> do
      let _afPfm = fst parameterAndCookie
      let cookie = snd parameterAndCookie
+     putStrLn cookie
      let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml?" ++ _afPfm
+     putStrLn url
      html <- try $ doPostRequest url cookie "WAUZZZ8P2AA090943" :: IO (Either SomeException String)
      case html of
       Left ex -> do
         putStrLn $ show ex
         return Nothing
-      Right html -> return $ Just html
+      Right html -> return $ Just ""
                       
 
 
@@ -123,7 +125,7 @@ doPostRequest url cookie_value vin = do
   initReq <- parseUrl url
   let req' = initReq { secure = True
                      , method = "POST"
-                     , cookieJar = Just $ createCookieJar [cookie cookie_value] 
+                     --, cookieJar = Just $ createCookieJar [cookie cookie_value] 
                      , requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]}
   let req = urlEncodedBody [("soegemaade", "content:center:bilbogen:stelnrOption"),
                             ("content:center:bilbogen:stelnr", B.pack(vin)),
@@ -133,7 +135,7 @@ doPostRequest url cookie_value vin = do
                             ("bogsattest", "content:center:bilbogen:uofficiel"),
                             ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
                             ("_noJavaScript", "false"),
-                            ("javax.faces.ViewState","!-pwa1crud3"),
+                            ("javax.faces.ViewState","!-fkpwmjj67"),
                             ("source","content:center:bilbogen:j_id150")]
                              req'
   resp <- withManager $ httpLbs req
