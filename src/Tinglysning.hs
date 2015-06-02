@@ -123,8 +123,8 @@ cookie value = Cookie { cookie_name = "TDK_JSESSIONID"
 doPostRequest :: String -> String -> String -> IO String
 doPostRequest url cookie_value vin = do
   initReq <- parseUrl url
-  let req' = initReq { secure = True
-                     , method = "POST"
+  let req' = initReq { --secure = True
+                     method = "POST"
                      , cookieJar = Just $ createCookieJar [cookie cookie_value] 
                      , requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]}
   let req = urlEncodedBody [("soegemaade", "content:center:bilbogen:stelnrOption"),
