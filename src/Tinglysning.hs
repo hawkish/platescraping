@@ -40,12 +40,18 @@ h = "/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=E4gvjvzPV_6n
 -- Get HTML from trafikstyrelsen.
 
 
-getParameterAndCookie :: IO (Maybe (String, String))
+getParameterAndCookie :: IO (Maybe (String, CookieJar))
 getParameterAndCookie = do
   response <- getHTMLTinglysning
   case response of
    Nothing -> return Nothing
-   Just html -> return $ getParameterAndCookie' html
+   Just response -> do
+     let parameter = getParameter $ fst response
+     case parameter of
+      Nothing -> return Nothing
+      Just parameter -> do
+        let cookie = snd response
+        return $ Just (parameter, cookie)
 
 filterAction :: String -> Maybe String
 filterAction a = case firstMaybe $ filter (isTagOpenName "form") (parseTags a) of
@@ -53,22 +59,24 @@ filterAction a = case firstMaybe $ filter (isTagOpenName "form") (parseTags a) o
                Just result -> Just (fromAttrib "action" result)
 
 -- Avoiding case expression ladder with Maybe Monad. 
-getParameterAndCookie' :: String -> Maybe (String, String)
-getParameterAndCookie' a = do
+getParameter :: String -> Maybe String
+getParameter a = do
    a1 <- filterAction a
    a2 <- getParameterAt a1 0
-   a3 <- getCookie a1
-   return (a2, a3)
+   return a2
 
-getHTMLTinglysning :: IO (Maybe String)
+getHTMLTinglysning :: IO (Maybe (String, CookieJar))
 getHTMLTinglysning = do
-  let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
-  html <- try $ doGetRequest url :: IO (Either SomeException String)
-  case html of
+  let url = "http://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
+  response <- try $ doGetRequest url :: IO (Either SomeException (String, CookieJar))
+  case response of
    Left ex -> do
      putStrLn $ show ex
      return Nothing
-   Right html -> return $ Just html
+   Right response -> do
+     let html = fst response
+     let cookie = snd response
+     return $ Just (html, cookie)
 
 postFormAtTinglysning :: IO (Maybe String)
 postFormAtTinglysning = do
@@ -78,67 +86,48 @@ postFormAtTinglysning = do
    Just parameterAndCookie -> do
      let _afPfm = fst parameterAndCookie
      let cookie = snd parameterAndCookie
-     putStrLn cookie
-     let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml?" ++ _afPfm
+     let url = "http://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml?" ++ _afPfm
      putStrLn url
      html <- try $ doPostRequest url cookie "WAUZZZ8P2AA090943" :: IO (Either SomeException String)
      case html of
       Left ex -> do
         putStrLn $ show ex
         return Nothing
-      Right html -> return $ Just ""
+      Right html -> return $ Just html
                       
 
-
-doGetRequest :: String -> IO String
+doGetRequest :: String -> IO (String, CookieJar)
 doGetRequest url = do
   initReq <- parseUrl url
-  let req' = initReq { secure = True }
+  let req' = initReq { secure = False }
   let req = req' {
         requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]
         }
   resp <- withManager $ httpLbs req
-  return $ L.unpack $ responseBody resp
+  return (L.unpack $ responseBody resp, responseCookieJar resp)
 
-past :: UTCTime
-past = UTCTime (ModifiedJulianDay 56200) (secondsToDiffTime 0)
-
-future :: UTCTime
-future = UTCTime (ModifiedJulianDay 562000) (secondsToDiffTime 0)
-
-cookie :: String -> Cookie
-cookie value = Cookie { cookie_name = "TDK_JSESSIONID"
-                 , cookie_value = B.pack(value)
-                 , cookie_expiry_time = future
-                 , cookie_domain = ""
-                 , cookie_path = "/"
-                 , cookie_creation_time = past
-                 , cookie_last_access_time = past
-                 , cookie_persistent = False
-                 , cookie_host_only = False
-                 , cookie_secure_only = False
-                 , cookie_http_only = False
-                 }
+doPostRequest :: String -> CookieJar -> String -> IO String
+doPostRequest url cookie vin = do
+  request' <- parseUrl url
+  let request = urlEncodedBody [("soegemaade", "content:center:bilbogen:stelnrOption"),
+                                ("content:center:bilbogen:stelnr", B.pack(vin)),
+                                ("content:center:bilbogen:cvr", ""),
+                                ("content:center:bilbogen:navn", ""),
+                                ("content:center:bilbogen:foedselsdato", ""),
+                                ("bogsattest", "content:center:bilbogen:uofficiel"),
+                                ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
+                                ("_noJavaScript", "false"),
+                                ("javax.faces.ViewState","!-fkpwmjj67"),
+                                ("source","content:center:bilbogen:j_id150")] $ request' {
+        secure = False
+        , method = "POST"
+        , cookieJar = Just cookie 
+        , requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]}
   
-doPostRequest :: String -> String -> String -> IO String
-doPostRequest url cookie_value vin = do
-  initReq <- parseUrl url
-  let req' = initReq { --secure = True
-                     method = "POST"
-                     , cookieJar = Just $ createCookieJar [cookie cookie_value] 
-                     , requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]}
-  let req = urlEncodedBody [("soegemaade", "content:center:bilbogen:stelnrOption"),
-                            ("content:center:bilbogen:stelnr", B.pack(vin)),
-                            ("content:center:bilbogen:cvr", ""),
-                            ("content:center:bilbogen:navn", ""),
-                            ("content:center:bilbogen:foedselsdato", ""),
-                            ("bogsattest", "content:center:bilbogen:uofficiel"),
-                            ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
-                            ("_noJavaScript", "false"),
-                            ("javax.faces.ViewState","!-fkpwmjj67"),
-                            ("source","content:center:bilbogen:j_id150")]
-                             req'
-  resp <- withManager $ httpLbs req
-  return $ L.unpack $ responseBody resp
+    --resp <- withManager $ httpLbs req
+  --return $ L.unpack $ responseBody resp
+  withManager $ \manager -> do
+    res <- httpLbs request manager
+    return $ L.unpack $ responseBody res
   
 
