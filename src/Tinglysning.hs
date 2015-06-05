@@ -63,14 +63,6 @@ filterAction a = case firstMaybe $ filter (isTagOpenName "form") (parseTags a) o
                Nothing -> Nothing
                Just result -> Just (fromAttrib "action" result)
 
--- Avoiding case expression ladder with Maybe Monad. 
-getParameter :: String -> Maybe String
-getParameter a = do
-   a1 <- filterAction a
-   a2 <- getParameterAt a1 0
-   return a2
-
-
 doFirstRequest :: IO (Maybe (String, Cookie))
 doFirstRequest = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
