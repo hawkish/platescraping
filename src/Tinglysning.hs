@@ -43,7 +43,7 @@ h = "/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=E4gvjvzPV_6n
 
 -- Get HTML from trafikstyrelsen.
 
-
+{--
 getParameterAndCookie :: IO (Maybe (String, Cookie))
 getParameterAndCookie = do
   response <- getHTMLTinglysning
@@ -56,6 +56,7 @@ getParameterAndCookie = do
       Just parameter -> do
         let cookie = snd response
         return $ Just (parameter, cookie)
+--}
 
 filterAction :: String -> Maybe String
 filterAction a = case firstMaybe $ filter (isTagOpenName "form") (parseTags a) of
@@ -69,8 +70,9 @@ getParameter a = do
    a2 <- getParameterAt a1 0
    return a2
 
-getHTMLTinglysning :: IO (Maybe (String, Cookie))
-getHTMLTinglysning = do
+
+doFirstRequest :: IO (Maybe (String, Cookie))
+doFirstRequest = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   response <- try $ doGetRequest url :: IO (Either SomeException (String, Cookie))
   case response of
@@ -78,10 +80,16 @@ getHTMLTinglysning = do
      putStrLn $ show ex
      return Nothing
    Right response -> do
-     let html = fst response
-     let cookie = snd response
-     return $ Just (html, cookie)
+     return $ processFirstResponse response 
 
+processFirstResponse :: (String, Cookie) -> Maybe (String, Cookie)
+processFirstResponse response = do
+  a1 <- filterAction $ fst response
+  _afPfm <- getParameterAt a1 0
+  let cookie = snd response
+  return (_afPfm, cookie)
+
+{--
 postFormAtTinglysning :: IO (Maybe (String, Cookie))
 postFormAtTinglysning = do
   parameterAndCookie <- getParameterAndCookie
@@ -90,7 +98,7 @@ postFormAtTinglysning = do
    Just parameterAndCookie -> do
      let _afPfm = fst parameterAndCookie
      let cookie = snd parameterAndCookie
-     let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
+     let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml∑"
      putStrLn url
      response <- try $ doPostRequest url _afPfm cookie "" :: IO (Either SomeException (String, Cookie))
      case response of
@@ -101,7 +109,7 @@ postFormAtTinglysning = do
         let html = fst response
         let cookie = snd response
         return $ Just (html, cookie)
-        
+--}        
                       
 
 doGetRequest :: String -> IO (String, Cookie)
