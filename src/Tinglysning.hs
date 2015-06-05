@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
@@ -43,7 +44,7 @@ h = "/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=E4gvjvzPV_6n
 -- Get HTML from trafikstyrelsen.
 
 
-getParameterAndCookie :: IO (Maybe (String, CookieJar))
+getParameterAndCookie :: IO (Maybe (String, Cookie))
 getParameterAndCookie = do
   response <- getHTMLTinglysning
   case response of
@@ -68,10 +69,10 @@ getParameter a = do
    a2 <- getParameterAt a1 0
    return a2
 
-getHTMLTinglysning :: IO (Maybe (String, CookieJar))
+getHTMLTinglysning :: IO (Maybe (String, Cookie))
 getHTMLTinglysning = do
-  let url = "http://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
-  response <- try $ doGetRequest url :: IO (Either SomeException (String, CookieJar))
+  let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
+  response <- try $ doGetRequest url :: IO (Either SomeException (String, Cookie))
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -81,7 +82,7 @@ getHTMLTinglysning = do
      let cookie = snd response
      return $ Just (html, cookie)
 
-postFormAtTinglysning :: IO (Maybe (String, CookieJar))
+postFormAtTinglysning :: IO (Maybe (String, Cookie))
 postFormAtTinglysning = do
   parameterAndCookie <- getParameterAndCookie
   case parameterAndCookie of
@@ -89,9 +90,9 @@ postFormAtTinglysning = do
    Just parameterAndCookie -> do
      let _afPfm = fst parameterAndCookie
      let cookie = snd parameterAndCookie
-     let url = "http://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml?" ++ _afPfm
+     let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
      putStrLn url
-     response <- try $ doPostRequest' url cookie "WAUZZZ8P2AA090943" :: IO (Either SomeException (String, CookieJar))
+     response <- try $ doPostRequest url _afPfm cookie "" :: IO (Either SomeException (String, Cookie))
      case response of
       Left ex -> do
         putStrLn $ show ex
@@ -103,43 +104,17 @@ postFormAtTinglysning = do
         
                       
 
-doGetRequest :: String -> IO (String, CookieJar)
+doGetRequest :: String -> IO (String, Cookie)
 doGetRequest url = do
   initReq <- parseUrl url
-  let req' = initReq { secure = False }
+  let req' = initReq { secure = True }
   let req = req' {
         requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]
         }
   resp <- withManager $ httpLbs req
-  return (L.unpack $ responseBody resp, responseCookieJar resp)
-
-doPostRequest :: String -> CookieJar -> String -> IO String
-doPostRequest url cookie vin = do
-  request' <- parseUrl url
-  let request = request' { method = "POST"
-                         , cookieJar = Just cookie }
-{--
-  let request = urlEncodedBody [("soegemaade", "content:center:bilbogen:stelnrOption"),
-                                ("content:center:bilbogen:stelnr", B.pack(vin)),
-                                ("content:center:bilbogen:cvr", ""),
-                                ("content:center:bilbogen:navn", ""),
-                                ("content:center:bilbogen:foedselsdato", ""),
-                                ("bogsattest", "content:center:bilbogen:uofficiel"),
-                                ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
-                                ("_noJavaScript", "false"),
-                                ("javax.faces.ViewState","!-fkpwmjj67"),
-                                ("source","content:center:bilbogen:j_id150")] $ request' {
-        secure = False
-        , method = "POST"
-        , cookieJar = Just $ cookie
-        , requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]}
---}  
-    --resp <- withManager $ httpLbs req
-  --return $ L.unpack $ responseBody resp
-  withManager $ \manager -> do
-    res <- httpLbs request manager
-    return $ L.unpack $ responseBody res
-
+  let cookieJar = responseCookieJar resp
+  let cookie = head $ destroyCookieJar cookieJar
+  return (L.unpack $ responseBody resp, cookie)
 
 past :: UTCTime
 past = UTCTime (ModifiedJulianDay 56200) (secondsToDiffTime 0)
@@ -147,34 +122,48 @@ past = UTCTime (ModifiedJulianDay 56200) (secondsToDiffTime 0)
 future :: UTCTime
 future = UTCTime (ModifiedJulianDay 562000) (secondsToDiffTime 0)
 
-cookie :: Cookie
-cookie = Cookie { cookie_name = "password_hash"
-                 , cookie_value = "abf472c35f8297fbcabf2911230001234fd2"
+newCookie :: B.ByteString -> B.ByteString -> Cookie
+newCookie name value = Cookie { cookie_name = name
+                 , cookie_value = value
                  , cookie_expiry_time = future
-                 , cookie_domain = "example.com"
+                 , cookie_domain = "www.tinglysning.dk"
                  , cookie_path = "/"
                  , cookie_creation_time = past
                  , cookie_last_access_time = past
                  , cookie_persistent = False
-                 , cookie_host_only = False
+                 , cookie_host_only = True
                  , cookie_secure_only = False
-                 , cookie_http_only = False
+                 , cookie_http_only = True
                  }
 
---doPostRequest' :: String -> CookieJar -> String -> IO String
 
-doPostRequest' :: String -> CookieJar -> String -> IO (String, CookieJar)
-doPostRequest' url cookie vin = do
-  initReq <- parseUrl url
+doPostRequest :: String -> String -> Cookie -> String -> IO (String, Cookie)
+doPostRequest url _afPfm cookie vin = do
+  --let cookie = destroyCookieJar cookieJar
+  let name = cookie_name cookie
+  let value = cookie_value cookie
+  let newcookie = newCookie name value
+  let endUrl = url ++ "?" ++ _afPfm
+  initReq <- parseUrl endUrl
   let req' = initReq {
-        secure = False
+        secure = True
         , method = "POST"
-        , cookieJar = Just cookie
-        --cookieJar = Just $ createCookieJar [cookie] 
-        , requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]
+        --, cookieJar = Just cookieJar
+        , cookieJar = Just $ createCookieJar [newcookie] 
+        , requestHeaders = [
+          ("Host","www.tinglysning.dk"),
+          ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
+          ("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"),
+          ("Accept-Language", "en-GB,en;q=0.5"),
+          ("Accept-Encoding", "gzip, deflate"),
+          ("Referer", B.pack(url)),
+          ("Tr-XHR-Message","true"),
+          ("Connection", "keep-alive"),
+          ("Pragma", "no-cache"),
+          ("Cache-Control", "no-cache")]
         }
   let req = urlEncodedBody [("soegemaade", "content:center:bilbogen:stelnrOption"),
-                                ("content:center:bilbogen:stelnr", B.pack(vin)),
+                                ("content:center:bilbogen:stelnr", ""),
                                 ("content:center:bilbogen:cvr", ""),
                                 ("content:center:bilbogen:navn", ""),
                                 ("content:center:bilbogen:foedselsdato", ""),
@@ -182,9 +171,13 @@ doPostRequest' url cookie vin = do
                                 ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
                                 ("_noJavaScript", "false"),
                                 ("javax.faces.ViewState","!-fkpwmjj67"),
-                                ("source","content:center:bilbogen:j_id150")] $ req'
+                                ("source","content:center:bilbogen:stelnrOption"),
+                                ("event","autosub"),
+                                ("partial","true")] $ req'
   
   resp <- withManager $ httpLbs req
-  return (L.unpack $ responseBody resp, responseCookieJar resp)
+  let cookieJar = responseCookieJar resp
+  let cookie = head $ destroyCookieJar cookieJar
+  return (L.unpack $ responseBody resp, cookie)
  
 
