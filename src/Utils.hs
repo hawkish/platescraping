@@ -1,9 +1,10 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (firstMaybe, following, getParameterAt, getCookie) where
+module Utils (following, getParameterAt) where
 
 import Data.List.Split
 import Control.Exception
 import Data.List
+import Data.Maybe
 import qualified Text.Parsec as Parsec
 
 -- I am the error message infix operator, used later:
@@ -23,10 +24,6 @@ parse rule text = Parsec.parse rule "(source)" text
 h = "/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=E4gvjvzPV_6nECcCdeE8POCn_QtrIGoS0LU6---cO4zQBWaWw0bX!-478567563!1440987210?_afPfm=-11ykkgvvlm&some=234"
 
 
-firstMaybe :: [a] -> Maybe a
-firstMaybe [] = Nothing
-firstMaybe a = Just $ head a
-
 following :: Eq a => a -> [a] -> [a]
 following a b =
   case elemIndex a b of
@@ -35,7 +32,7 @@ following a b =
                                          where result = drop (index+1) b
 
 getParametersAsString :: String -> Maybe String
-getParametersAsString a = firstMaybe . drop 1 $ splitOn "?" a
+getParametersAsString a = listToMaybe . drop 1 $ splitOn "?" a
 
 getParameterAt' :: String -> Int -> Maybe String
 getParameterAt' a n = if n > limit
@@ -53,9 +50,9 @@ getParameterAt a n = do
 
 getCookie :: String -> Maybe String
 getCookie a = do
-  a1 <- firstMaybe . drop 1 $ splitOn ";" a
-  a2 <- firstMaybe $ splitOn "?" a1
-  a3 <- firstMaybe . drop 1 $ splitOn "=" a2
+  a1 <- listToMaybe . drop 1 $ splitOn ";" a
+  a2 <- listToMaybe $ splitOn "?" a1
+  a3 <- listToMaybe . drop 1 $ splitOn "=" a2
   return a3
                                 
 {--
