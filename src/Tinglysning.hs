@@ -9,8 +9,7 @@ import Control.Exception
 import Data.List
 import Data.List.Split
 import Data.Char
-import qualified Data.ByteString.Lazy.Char8 as L
-import qualified Data.ByteString.Lazy as R
+import qualified Data.ByteString.Lazy.Char8 as LB
 import qualified Data.ByteString.Char8 as B
 import Utils (following, getParameterAt)
 import Control.Monad
@@ -28,6 +27,10 @@ import Network.HTTP.Types.Status (statusCode)
 n = "<form id=\"j_id4\" name=\"j_id4\" style=\"margin:0px\" method=\"POST\" onkeypress=\"return _submitOnEnter(event,'j_id4');\" action=\"/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=SlEuMoHouvqLGdJ_fICGH8lzaDjd6tNZ0WKFdKJ6vHtRHb7o3ZOj!1927900994!-478567563?_afPfm=-1bav6tyn4e\">\n\n&#9;<div class=\"container-logotop\">\n    <script type=\"text/javascript\" src=\"/tinglysning/js/helptext.js\"></script>\n    <script type=\"text/javascript\" src=\"/tinglysning/js/utils.js\"></script>\n"
 
 h = "/tinglysning/forespoerg/bilbogen/bilbogen.xhtml;TDK_JSESSIONID=E4gvjvzPV_6nECcCdeE8POCn_QtrIGoS0LU6---cO4zQBWaWw0bX!-478567563!1440987210?_afPfm=-11ykkgvvlm&some=234"
+
+url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
+
+a = "<input type=\"hidden\" name=\"_noJavaScript\" value=\"false\"><span id=\"tr_j_id4_Postscript\"><input type=\"hidden\" name=\"javax.faces.ViewState\" value=\"!-tcw82nrpf\"><input type=\"hidden\" name=\"source\">"
 
 {--
 getParameterAndCookie :: IO (Maybe (String, Cookie))
@@ -67,6 +70,8 @@ filterAction a = case listToMaybe $ filter (isTagOpenName "form") (parseTags a) 
                Nothing -> Nothing
                Just result -> Just (fromAttrib "action" result)
 
+filterInput :: String -> [Tag String]
+filterInput a = dropWhile (~== "input" :: Text.HTML.TagSoup.TagRep) (filter (isTagOpenName "input") (parseTags a))
 
 {--
 postFormAtTinglysning :: IO (Maybe (String, Cookie))
@@ -101,7 +106,7 @@ doGetRequest url = do
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
-  return (L.unpack $ responseBody resp, cookieList)
+  return (LB.unpack $ responseBody resp, cookieList)
 
 past :: UTCTime
 past = UTCTime (ModifiedJulianDay 56200) (secondsToDiffTime 0)
@@ -165,6 +170,6 @@ doPostRequest url _afPfm cookie vin = do
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
   let cookie = head $ destroyCookieJar cookieJar
-  return (L.unpack $ responseBody resp, cookie)
+  return (LB.unpack $ responseBody resp, cookie)
  
 
