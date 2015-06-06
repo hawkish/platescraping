@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (following, getParameterAt) where
+module Utils (following, getParameterAt, extractFst, extractSnd, extractTrd) where
 
 import Data.List.Split
 import Control.Exception
@@ -79,7 +79,13 @@ myParser = do
   letters <- Parsec.many1 Parsec.letter
   return $ letters
 
+extractFst :: (a, b, c) -> a
+extractFst (a,_,_) = a
 
+extractSnd :: (a, b, c) -> b
+extractSnd (_,b,_) = b
 
+extractTrd :: (a, b, c) -> c
+extractTrd (_,_,c) = c
 
 
