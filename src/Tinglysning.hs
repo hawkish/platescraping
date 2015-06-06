@@ -32,32 +32,18 @@ url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml
 
 a = "<input type=\"hidden\" name=\"_noJavaScript\" value=\"false\"><span id=\"tr_j_id4_Postscript\"><input type=\"hidden\" name=\"javax.faces.ViewState\" value=\"!-tcw82nrpf\"><input type=\"hidden\" name=\"source\">"
 
-{--
-getParameterAndCookie :: IO (Maybe (String, Cookie))
-getParameterAndCookie = do
-  response <- getHTMLTinglysning
-  case response of
-   Nothing -> return Nothing
-   Just response -> do
-     let parameter = getParameter $ fst response
-     case parameter of
-      Nothing -> return Nothing
-      Just parameter -> do
-        let cookie = snd response
-        return $ Just (parameter, cookie)
---}
+b = "<?xml version=\"1.0\" ?>\n<?Tr-XHR-Response-Type ?>\n<content action=\"/tinglysning/forespoerg/bilbogen/bilbogen.xhtml?_afPfm=-x8n0v5c5u\"> \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n<fragment>"
+
 
 doSndRequest vin _afPfm viewState cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
-  response <- try $ doPostRequest vin url _afPfm viewState cookie :: IO (Either SomeException (String, Cookie))
+  response <- try $ doPostRequest vin url _afPfm viewState cookie :: IO (Either SomeException (String, [Cookie]))
   case response of
    Left ex -> do
      putStrLn $ show ex
      return Nothing
    Right response -> do
-     let html = fst response
-     let cookie = snd response
-     return $ Just (html, cookie)
+     return $ procSndResponse response
 
 doFstRequest :: IO (Maybe (String, String, [Cookie]))
 doFstRequest = do
@@ -72,14 +58,21 @@ doFstRequest = do
 
 procFstResponse :: (String, [Cookie]) -> Maybe (String, String, [Cookie])
 procFstResponse response = do
-  a1 <- filterAction $ fst response
+  a1 <- filterForm $ fst response
   _afPfm <- getParameterAt a1 0
   let cookieList = snd response
   viewState <- filterInput $ fst response
   return (_afPfm, viewState, cookieList)
 
-filterAction :: String -> Maybe String
-filterAction a = case listToMaybe $ filter (isTagOpenName "form") (parseTags a) of
+procSndResponse :: (String, [Cookie]) -> Maybe (String, [Cookie])
+procSndResponse response = do
+  a1 <- filterContent $ fst response
+  _afPfm <- getParameterAt a1 0
+  let cookieList = snd response
+  return (_afPfm, cookieList)
+
+filterForm :: String -> Maybe String
+filterForm a = case listToMaybe $ filter (isTagOpenName "form") (parseTags a) of
                Nothing -> Nothing
                Just result -> Just (fromAttrib "action" result)
 
@@ -88,7 +81,10 @@ filterInput a = case listToMaybe $ filter (~== ("<input name=javax.faces.ViewSta
                  Nothing -> Nothing
                  Just result -> Just (fromAttrib "value" result)
 
-
+filterContent :: String -> Maybe String
+filterContent a = case listToMaybe $ filter (isTagOpenName "content") (parseTags a) of
+               Nothing -> Nothing
+               Just result -> Just (fromAttrib "action" result)
 
 doRequests = do
   a1 <- doFstRequest
@@ -99,8 +95,13 @@ doRequests = do
      putStr _afPfm
      let viewState = extractSnd a1
      let cookie = extractTrd a1
-     a2 <- doSndRequest "" _afPfm viewState cookie
-     return $ Just a2
+     a2 <- doSndRequest "" _afPfm viewState cookie 
+     case a2 of
+      Nothing -> return Nothing
+      Just a2 -> do
+        let _afPfm2 = fst a2
+        let cookie = snd a2
+        return $ Just _afPfm2
 
 
 doGetRequest :: String -> IO (String, [Cookie])
@@ -136,12 +137,12 @@ newCookie name value = Cookie { cookie_name = name
                  }
 
 
-doPostRequest :: String -> String -> String -> String -> [Cookie] -> IO (String, Cookie)
+doPostRequest :: String -> String -> String -> String -> [Cookie] -> IO (String, [Cookie])
 doPostRequest vin url _afPfm viewState cookie = do
   --let cookie = destroyCookieJar cookieJar
-  let name = cookie_name $ head cookie
-  let value = cookie_value $ head cookie
-  let newcookie = newCookie name value
+  --let name = cookie_name $ head cookie
+  --let value = cookie_value $ head cookie
+  --let newcookie = newCookie name value
   initReq <- parseUrl $ url ++ "?" ++ _afPfm
   let req' = initReq {
         secure = True
@@ -176,7 +177,7 @@ doPostRequest vin url _afPfm viewState cookie = do
   
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
-  let cookie = head $ destroyCookieJar cookieJar
-  return (LB.unpack $ responseBody resp, cookie)
+  let cookieList = destroyCookieJar cookieJar
+  return (LB.unpack $ responseBody resp, cookieList)
  
 
