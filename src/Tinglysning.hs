@@ -35,9 +35,63 @@ a = "<input type=\"hidden\" name=\"_noJavaScript\" value=\"false\"><span id=\"tr
 b = "<?xml version=\"1.0\" ?>\n<?Tr-XHR-Response-Type ?>\n<content action=\"/tinglysning/forespoerg/bilbogen/bilbogen.xhtml?_afPfm=-x8n0v5c5u\"> \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n<fragment>"
 
 
+
+doFthRequest _afPfm viewState cookie = do
+  let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
+  let requestHeaders = [
+          ("Host","www.tinglysning.dk"),
+          ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
+          ("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"),
+          ("Accept-Language", "en-GB,en;q=0.5"),
+          ("Accept-Encoding", "gzip, deflate"),
+          ("Referer", "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"),
+          ("Connection", "keep-alive"),
+          ("Pragma", "no-cache"),
+          ("Cache-Control", "no-cache")]
+  response <- try $ doGetRequest url requestHeaders _afPfm viewState cookie :: IO (Either SomeException (String, [Cookie]))
+  case response of
+   Left ex -> do
+     putStrLn $ show ex
+     return Nothing
+   Right response -> do
+     return $ Just response 
+
+
+doTrdRequest vin _afPfm viewState cookie = do
+  let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
+  let requestHeaders = [
+          ("Host","www.tinglysning.dk"),
+          ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
+          ("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"),
+          ("Accept-Language", "en-GB,en;q=0.5"),
+          ("Accept-Encoding", "gzip, deflate"),
+          ("Referer", B.pack(url)),
+          ("Connection", "keep-alive"),
+          ("Pragma", "no-cache"),
+          ("Cache-Control", "no-cache")]
+  response <- try $ doPostRequest' vin url requestHeaders _afPfm viewState cookie :: IO (Either SomeException (String, [Cookie]))
+  case response of
+   Left ex -> do
+     putStrLn $ show ex
+     return Nothing
+   Right response -> do
+     return $ Just response
+
+
 doSndRequest vin _afPfm viewState cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
-  response <- try $ doPostRequest vin url _afPfm viewState cookie :: IO (Either SomeException (String, [Cookie]))
+  let requestHeaders = [
+          ("Host","www.tinglysning.dk"),
+          ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
+          ("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"),
+          ("Accept-Language", "en-GB,en;q=0.5"),
+          ("Accept-Encoding", "gzip, deflate"),
+          ("Referer", B.pack(url)),
+          ("Tr-XHR-Message","true"),
+          ("Connection", "keep-alive"),
+          ("Pragma", "no-cache"),
+          ("Cache-Control", "no-cache")]
+  response <- try $ doPostRequest vin url requestHeaders _afPfm viewState cookie :: IO (Either SomeException (String, [Cookie]))
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -48,7 +102,7 @@ doSndRequest vin _afPfm viewState cookie = do
 doFstRequest :: IO (Maybe (String, String, [Cookie]))
 doFstRequest = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
-  response <- try $ doGetRequest url :: IO (Either SomeException (String, [Cookie]))
+  response <- try $ doSimpleGetRequest url :: IO (Either SomeException (String, [Cookie]))
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -101,11 +155,13 @@ doRequests = do
       Just a2 -> do
         let _afPfm2 = fst a2
         let cookie = snd a2
-        return $ Just _afPfm2
+        a3 <- doTrdRequest "WAUZZZ8P2AA090943" _afPfm2 viewState cookie
+        a4 <- doFthRequest _afPfm2 viewState cookie
+        return $ Just a4
 
 
-doGetRequest :: String -> IO (String, [Cookie])
-doGetRequest url = do
+doSimpleGetRequest :: String -> IO (String, [Cookie])
+doSimpleGetRequest url = do
   initReq <- parseUrl url
   let req' = initReq { secure = True }
   let req = req' {
@@ -136,13 +192,22 @@ newCookie name value = Cookie { cookie_name = name
                  , cookie_http_only = True
                  }
 
+doGetRequest :: String -> RequestHeaders -> String -> String -> [Cookie] -> IO (String, [Cookie])
+doGetRequest url requestHeadersList _afPfm viewState cookie = do
+  initReq <- parseUrl $ url ++ "?" ++ _afPfm
+  let req = initReq {
+        secure = True
+        , method = "GET"
+        , cookieJar = Just $ createCookieJar cookie
+        , requestHeaders = requestHeadersList
+        }
+  resp <- withManager $ httpLbs req
+  let cookieJar = responseCookieJar resp
+  let cookieList = destroyCookieJar cookieJar
+  return (LB.unpack $ responseBody resp, cookieList)
 
-doPostRequest :: String -> String -> String -> String -> [Cookie] -> IO (String, [Cookie])
-doPostRequest vin url _afPfm viewState cookie = do
-  --let cookie = destroyCookieJar cookieJar
-  --let name = cookie_name $ head cookie
-  --let value = cookie_value $ head cookie
-  --let newcookie = newCookie name value
+doPostRequest :: String -> String -> RequestHeaders -> String -> String -> [Cookie] -> IO (String, [Cookie])
+doPostRequest vin url requestHeadersList _afPfm viewState cookie = do
   initReq <- parseUrl $ url ++ "?" ++ _afPfm
   let req' = initReq {
         secure = True
@@ -150,20 +215,10 @@ doPostRequest vin url _afPfm viewState cookie = do
         --, cookieJar = Just cookieJar
         , cookieJar = Just $ createCookieJar cookie
         --, cookieJar = Just $ createCookieJar [newcookie] 
-        , requestHeaders = [
-          ("Host","www.tinglysning.dk"),
-          ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
-          ("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"),
-          ("Accept-Language", "en-GB,en;q=0.5"),
-          ("Accept-Encoding", "gzip, deflate"),
-          ("Referer", B.pack(url)),
-          ("Tr-XHR-Message","true"),
-          ("Connection", "keep-alive"),
-          ("Pragma", "no-cache"),
-          ("Cache-Control", "no-cache")]
+        , requestHeaders = requestHeadersList
         }
   let req = urlEncodedBody [("soegemaade", "content:center:bilbogen:stelnrOption"),
-                                ("content:center:bilbogen:stelnr", ""),
+                                ("content:center:bilbogen:stelnr", B.pack(vin)),
                                 ("content:center:bilbogen:cvr", ""),
                                 ("content:center:bilbogen:navn", ""),
                                 ("content:center:bilbogen:foedselsdato", ""),
@@ -174,6 +229,33 @@ doPostRequest vin url _afPfm viewState cookie = do
                                 ("source","content:center:bilbogen:stelnrOption"),
                                 ("event","autosub"),
                                 ("partial","true")] $ req'
+  
+  resp <- withManager $ httpLbs req
+  let cookieJar = responseCookieJar resp
+  let cookieList = destroyCookieJar cookieJar
+  return (LB.unpack $ responseBody resp, cookieList)
+
+doPostRequest' :: String -> String -> RequestHeaders -> String -> String -> [Cookie] -> IO (String, [Cookie])
+doPostRequest' vin url requestHeadersList _afPfm viewState cookie = do
+  initReq <- parseUrl $ url ++ "?" ++ _afPfm
+  let req' = initReq {
+        secure = True
+        , method = "POST"
+        --, cookieJar = Just cookieJar
+        , cookieJar = Just $ createCookieJar cookie
+        --, cookieJar = Just $ createCookieJar [newcookie] 
+        , requestHeaders = requestHeadersList
+        }
+  let req = urlEncodedBody [("soegemaade", "content:center:bilbogen:stelnrOption"),
+                                ("content:center:bilbogen:stelnr", B.pack(vin)),
+                                ("content:center:bilbogen:cvr", ""),
+                                ("content:center:bilbogen:navn", ""),
+                                ("content:center:bilbogen:foedselsdato", ""),
+                                ("bogsattest", "content:center:bilbogen:uofficiel"),
+                                ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
+                                ("_noJavaScript", "false"),
+                                ("javax.faces.ViewState", B.pack(viewState)),
+                                ("source","content:center:bilbogen:stelnrOption")] $ req'
   
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
