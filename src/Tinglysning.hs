@@ -146,7 +146,7 @@ doRequests = do
    Nothing -> return Nothing
    Just a1 -> do
      let _afPfm = extractFst a1
-     putStr _afPfm
+     putStrLn _afPfm
      let viewState = extractSnd a1
      let cookie = extractTrd a1
      a2 <- doSndRequest "" _afPfm viewState cookie 
@@ -154,10 +154,11 @@ doRequests = do
       Nothing -> return Nothing
       Just a2 -> do
         let _afPfm2 = fst a2
+        putStrLn _afPfm2
         let cookie = snd a2
         a3 <- doTrdRequest "WAUZZZ8P2AA090943" _afPfm2 viewState cookie
         a4 <- doFthRequest _afPfm2 viewState cookie
-        return $ Just a4
+        return $ Just a2
 
 
 doSimpleGetRequest :: String -> IO (String, [Cookie])
