@@ -44,10 +44,10 @@ getParameterAndCookie = do
         return $ Just (parameter, cookie)
 --}
 
-doFstRequest :: IO (Maybe (String, Cookie))
+doFstRequest :: IO (Maybe (String, [Cookie]))
 doFstRequest = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
-  response <- try $ doGetRequest url :: IO (Either SomeException (String, Cookie))
+  response <- try $ doGetRequest url :: IO (Either SomeException (String, [Cookie]))
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -55,12 +55,12 @@ doFstRequest = do
    Right response -> do
      return $ procFstResponse response 
 
-procFstResponse :: (String, Cookie) -> Maybe (String, Cookie)
+procFstResponse :: (String, [Cookie]) -> Maybe (String, [Cookie])
 procFstResponse response = do
   a1 <- filterAction $ fst response
   _afPfm <- getParameterAt a1 0
-  let cookie = snd response
-  return (_afPfm, cookie)
+  let cookieList = snd response
+  return (_afPfm, cookieList)
 
 filterAction :: String -> Maybe String
 filterAction a = case listToMaybe $ filter (isTagOpenName "form") (parseTags a) of
@@ -91,7 +91,7 @@ postFormAtTinglysning = do
 --}        
                       
 
-doGetRequest :: String -> IO (String, Cookie)
+doGetRequest :: String -> IO (String, [Cookie])
 doGetRequest url = do
   initReq <- parseUrl url
   let req' = initReq { secure = True }
@@ -100,8 +100,8 @@ doGetRequest url = do
         }
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
-  let cookie = head $ destroyCookieJar cookieJar
-  return (L.unpack $ responseBody resp, cookie)
+  let cookieList = destroyCookieJar cookieJar
+  return (L.unpack $ responseBody resp, cookieList)
 
 past :: UTCTime
 past = UTCTime (ModifiedJulianDay 56200) (secondsToDiffTime 0)
