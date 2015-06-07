@@ -79,7 +79,7 @@ doTrdRequest vin _afPfm viewState cookie = do
         ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
         ("_noJavaScript", "false"),
         ("javax.faces.ViewState", B.pack(viewState)),
-        ("source","content:center:bilbogen:stelnrOption")]
+        ("source","content:center:bilbogen:j_id150")]
   response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (String, [Cookie]))
   case response of
    Left ex -> do
@@ -184,7 +184,7 @@ doRequests = do
         let cookie = snd a2
         a3 <- doTrdRequest "WAUZZZ8P2AA090943" _afPfm2 viewState cookie
         a4 <- doFthRequest _afPfm2 viewState cookie
-        return $ Just a2
+        return $ Just a4
 
 
 past :: UTCTime
@@ -211,7 +211,7 @@ doSimplerGetRequest :: String -> RequestHeaders -> IO (String, [Cookie])
 doSimplerGetRequest url requestHeadersList = do
   initReq <- parseUrl url
   let req = initReq {
-        secure = False
+        secure = True
         , method = "GET"
         , requestHeaders = requestHeadersList
         }
@@ -224,7 +224,7 @@ doGetRequest :: String -> RequestHeaders -> String -> String -> [Cookie] -> IO (
 doGetRequest url requestHeadersList _afPfm viewState cookie = do
   initReq <- parseUrl $ url ++ "?" ++ _afPfm
   let req = initReq {
-        secure = False
+        secure = True
         , method = "GET"
         , cookieJar = Just $ createCookieJar cookie
         , requestHeaders = requestHeadersList
@@ -238,7 +238,7 @@ doPostRequest :: String -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> S
 doPostRequest url requestHeadersList body _afPfm cookie = do
   initReq <- parseUrl $ url ++ "?" ++ _afPfm
   let req' = initReq {
-        secure = False
+        secure = True
         , method = "POST"
         --, cookieJar = Just cookieJar
         , cookieJar = Just $ createCookieJar cookie
