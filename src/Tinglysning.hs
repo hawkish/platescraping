@@ -56,6 +56,34 @@ doRequests = do
         a4 <- doFthRequest _afPfm2 viewState cookie
         return $ Just a4
 
+doFfthRequest _afPfm range viewState listItem cookie = do
+  let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
+  let requestHeaders = [
+          ("Host","www.tinglysning.dk"),
+          ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
+          ("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"),
+          ("Accept-Language", "en-GB,en;q=0.5"),
+          ("Accept-Encoding", "gzip, deflate"),
+          ("Referer", B.pack(url)),
+          ("Connection", "keep-alive"),
+          ("Pragma", "no-cache"),
+          ("Cache-Control", "no-cache")]
+  let body = [
+        ("content:center:bilbogenresults:bilerid:rangeStart", B.pack(range)),
+        ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
+        ("_noJavaScript", "false"),
+        ("javax.faces.ViewState", B.pack(viewState)),
+        ("source","content:center:bilbogenresults:bilerid:0:visbildetaljer"),
+        ("state", ""),
+        ("value", ""),
+        ("listItem", B.pack(listItem))]
+  response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (String, [Cookie]))
+  case response of
+   Left ex -> do
+     putStrLn $ show ex
+     return Nothing
+   Right response -> do
+     return $ Just response
 
 doFthRequest _afPfm viewState cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
