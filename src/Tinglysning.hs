@@ -69,7 +69,18 @@ doTrdRequest vin _afPfm viewState cookie = do
           ("Connection", "keep-alive"),
           ("Pragma", "no-cache"),
           ("Cache-Control", "no-cache")]
-  response <- try $ doPostRequest' vin url requestHeaders _afPfm viewState cookie :: IO (Either SomeException (String, [Cookie]))
+  let body = [
+        ("soegemaade", "content:center:bilbogen:stelnrOption"),
+        ("content:center:bilbogen:stelnr", B.pack(vin)),
+        ("content:center:bilbogen:cvr", ""),
+        ("content:center:bilbogen:navn", ""),
+        ("content:center:bilbogen:foedselsdato", ""),
+        ("bogsattest", "content:center:bilbogen:uofficiel"),
+        ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
+        ("_noJavaScript", "false"),
+        ("javax.faces.ViewState", B.pack(viewState)),
+        ("source","content:center:bilbogen:stelnrOption")]
+  response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (String, [Cookie]))
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -91,7 +102,20 @@ doSndRequest vin _afPfm viewState cookie = do
           ("Connection", "keep-alive"),
           ("Pragma", "no-cache"),
           ("Cache-Control", "no-cache")]
-  response <- try $ doPostRequest vin url requestHeaders _afPfm viewState cookie :: IO (Either SomeException (String, [Cookie]))
+  let body = [
+        ("soegemaade", "content:center:bilbogen:stelnrOption"),
+        ("content:center:bilbogen:stelnr", B.pack(vin)),
+        ("content:center:bilbogen:cvr", ""),
+        ("content:center:bilbogen:navn", ""),
+        ("content:center:bilbogen:foedselsdato", ""),
+        ("bogsattest", "content:center:bilbogen:uofficiel"),
+        ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
+        ("_noJavaScript", "false"),
+        ("javax.faces.ViewState", B.pack(viewState)),
+        ("source","content:center:bilbogen:stelnrOption"),
+        ("event","autosub"),
+        ("partial","true")]
+  response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (String, [Cookie]))
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -102,7 +126,9 @@ doSndRequest vin _afPfm viewState cookie = do
 doFstRequest :: IO (Maybe (String, String, [Cookie]))
 doFstRequest = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
-  response <- try $ doSimpleGetRequest url :: IO (Either SomeException (String, [Cookie]))
+  let requestHeaders = [
+          ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]
+  response <- try $ doSimplerGetRequest url requestHeaders :: IO (Either SomeException (String, [Cookie]))
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -161,18 +187,6 @@ doRequests = do
         return $ Just a2
 
 
-doSimpleGetRequest :: String -> IO (String, [Cookie])
-doSimpleGetRequest url = do
-  initReq <- parseUrl url
-  let req' = initReq { secure = True }
-  let req = req' {
-        requestHeaders = [("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]
-        }
-  resp <- withManager $ httpLbs req
-  let cookieJar = responseCookieJar resp
-  let cookieList = destroyCookieJar cookieJar
-  return (LB.unpack $ responseBody resp, cookieList)
-
 past :: UTCTime
 past = UTCTime (ModifiedJulianDay 56200) (secondsToDiffTime 0)
 
@@ -193,11 +207,24 @@ newCookie name value = Cookie { cookie_name = name
                  , cookie_http_only = True
                  }
 
+doSimplerGetRequest :: String -> RequestHeaders -> IO (String, [Cookie])
+doSimplerGetRequest url requestHeadersList = do
+  initReq <- parseUrl url
+  let req = initReq {
+        secure = False
+        , method = "GET"
+        , requestHeaders = requestHeadersList
+        }
+  resp <- withManager $ httpLbs req
+  let cookieJar = responseCookieJar resp
+  let cookieList = destroyCookieJar cookieJar
+  return (LB.unpack $ responseBody resp, cookieList)
+
 doGetRequest :: String -> RequestHeaders -> String -> String -> [Cookie] -> IO (String, [Cookie])
 doGetRequest url requestHeadersList _afPfm viewState cookie = do
   initReq <- parseUrl $ url ++ "?" ++ _afPfm
   let req = initReq {
-        secure = True
+        secure = False
         , method = "GET"
         , cookieJar = Just $ createCookieJar cookie
         , requestHeaders = requestHeadersList
@@ -207,60 +234,20 @@ doGetRequest url requestHeadersList _afPfm viewState cookie = do
   let cookieList = destroyCookieJar cookieJar
   return (LB.unpack $ responseBody resp, cookieList)
 
-doPostRequest :: String -> String -> RequestHeaders -> String -> String -> [Cookie] -> IO (String, [Cookie])
-doPostRequest vin url requestHeadersList _afPfm viewState cookie = do
+doPostRequest :: String -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> String -> [Cookie] -> IO (String, [Cookie])
+doPostRequest url requestHeadersList body _afPfm cookie = do
   initReq <- parseUrl $ url ++ "?" ++ _afPfm
   let req' = initReq {
-        secure = True
+        secure = False
         , method = "POST"
         --, cookieJar = Just cookieJar
         , cookieJar = Just $ createCookieJar cookie
         --, cookieJar = Just $ createCookieJar [newcookie] 
         , requestHeaders = requestHeadersList
         }
-  let req = urlEncodedBody [("soegemaade", "content:center:bilbogen:stelnrOption"),
-                                ("content:center:bilbogen:stelnr", B.pack(vin)),
-                                ("content:center:bilbogen:cvr", ""),
-                                ("content:center:bilbogen:navn", ""),
-                                ("content:center:bilbogen:foedselsdato", ""),
-                                ("bogsattest", "content:center:bilbogen:uofficiel"),
-                                ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
-                                ("_noJavaScript", "false"),
-                                ("javax.faces.ViewState", B.pack(viewState)),
-                                ("source","content:center:bilbogen:stelnrOption"),
-                                ("event","autosub"),
-                                ("partial","true")] $ req'
-  
+  let req = urlEncodedBody body $ req'
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
   return (LB.unpack $ responseBody resp, cookieList)
-
-doPostRequest' :: String -> String -> RequestHeaders -> String -> String -> [Cookie] -> IO (String, [Cookie])
-doPostRequest' vin url requestHeadersList _afPfm viewState cookie = do
-  initReq <- parseUrl $ url ++ "?" ++ _afPfm
-  let req' = initReq {
-        secure = True
-        , method = "POST"
-        --, cookieJar = Just cookieJar
-        , cookieJar = Just $ createCookieJar cookie
-        --, cookieJar = Just $ createCookieJar [newcookie] 
-        , requestHeaders = requestHeadersList
-        }
-  let req = urlEncodedBody [("soegemaade", "content:center:bilbogen:stelnrOption"),
-                                ("content:center:bilbogen:stelnr", B.pack(vin)),
-                                ("content:center:bilbogen:cvr", ""),
-                                ("content:center:bilbogen:navn", ""),
-                                ("content:center:bilbogen:foedselsdato", ""),
-                                ("bogsattest", "content:center:bilbogen:uofficiel"),
-                                ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
-                                ("_noJavaScript", "false"),
-                                ("javax.faces.ViewState", B.pack(viewState)),
-                                ("source","content:center:bilbogen:stelnrOption")] $ req'
   
-  resp <- withManager $ httpLbs req
-  let cookieJar = responseCookieJar resp
-  let cookieList = destroyCookieJar cookieJar
-  return (LB.unpack $ responseBody resp, cookieList)
- 
-
