@@ -34,6 +34,27 @@ a = "<input type=\"hidden\" name=\"_noJavaScript\" value=\"false\"><span id=\"tr
 
 b = "<?xml version=\"1.0\" ?>\n<?Tr-XHR-Response-Type ?>\n<content action=\"/tinglysning/forespoerg/bilbogen/bilbogen.xhtml?_afPfm=-x8n0v5c5u\"> \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n<fragment>"
 
+c = "<td class=\"af_column_cell-text OraTableBorder1111\"><span id=\"content:center:bilbogenresults:bilerid:0:stelnummer\">WAUZZZ8P2AA090943</span></td><td class=\"af_column_cell-text OraTableBorder1111\">AM32511</td><td class=\"af_column_cell-text OraTableBorder1111\">AUDI</td><td class=\"af_column_cell-text OraTableBorder1111\">2009</td><td class=\"af_column_cell-text OraTableBorder1111\"></td><td class=\"af_column_cell-text OraTableBorder1111\"><a id=\"content:center:bilbogenresults:bilerid:0:visbildetaljer\" name=\"content:center:bilbogenresults:bilerid:0:visbildetaljer\" onclick=\"submitForm('j_id4',1,{source:'content:center:bilbogenresults:bilerid:0:visbildetaljer','listItem':'f2922aa1-de72-4be6-8dc2-c57610a7c4ad'});return false;\" class=\"OraLink\" href=\"#\">Vis</a></td></tr></table></td></tr></table><script type=\"text/javascript\">_uixt_content_center_bilbogenresults_bilerid=new CollectionComponent('j_id4','content:center:bilbogenresults:bilerid');</script><input type=\"hidden\" name=\"content:center:bilbogenresults:bilerid:rangeStart\" value=\"0\"></div></div>\n\n  <p></p><input id=\"content:center:bilbogenresults:j_id118\" name=\"content:center:bilbogenresults:j_id118\" type=\"submit\" value=\"(S)&oslash;g igen\" onclick=\"submitForm('j_id4',1,{source:'content:center:bilbogenresults:j_id118'});return false;\" accesskey=\"S\">\n\n<br>\n<br>\n</td>"
+
+doRequests = do
+  a1 <- doFstRequest
+  case a1 of
+   Nothing -> return Nothing
+   Just a1 -> do
+     let _afPfm = extractFst a1
+     putStrLn _afPfm
+     let viewState = extractSnd a1
+     let cookie = extractTrd a1
+     a2 <- doSndRequest "" _afPfm viewState cookie 
+     case a2 of
+      Nothing -> return Nothing
+      Just a2 -> do
+        let _afPfm2 = fst a2
+        putStrLn _afPfm2
+        let cookie = snd a2
+        a3 <- doTrdRequest "WAUZZZ8P2AA090943" _afPfm2 viewState cookie
+        a4 <- doFthRequest _afPfm2 viewState cookie
+        return $ Just a4
 
 
 doFthRequest _afPfm viewState cookie = do
@@ -55,7 +76,6 @@ doFthRequest _afPfm viewState cookie = do
      return Nothing
    Right response -> do
      return $ Just response 
-
 
 doTrdRequest vin _afPfm viewState cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
@@ -166,27 +186,12 @@ filterContent a = case listToMaybe $ filter (isTagOpenName "content") (parseTags
                Nothing -> Nothing
                Just result -> Just (fromAttrib "action" result)
 
-doRequests = do
-  a1 <- doFstRequest
-  case a1 of
-   Nothing -> return Nothing
-   Just a1 -> do
-     let _afPfm = extractFst a1
-     putStrLn _afPfm
-     let viewState = extractSnd a1
-     let cookie = extractTrd a1
-     a2 <- doSndRequest "" _afPfm viewState cookie 
-     case a2 of
-      Nothing -> return Nothing
-      Just a2 -> do
-        let _afPfm2 = fst a2
-        putStrLn _afPfm2
-        let cookie = snd a2
-        a3 <- doTrdRequest "WAUZZZ8P2AA090943" _afPfm2 viewState cookie
-        a4 <- doFthRequest _afPfm2 viewState cookie
-        return $ Just a4
+filterAnchor :: String -> Maybe String
+filterAnchor a = case listToMaybe $ filter (~== ("<a name=content:center:bilbogenresults:bilerid:0:visbildetaljer" :: String)) $ filter (isTagOpenName "a") (parseTags a) of
+                 Nothing -> Nothing
+                 Just result -> Just (fromAttrib "onclick" result)
 
-
+{--
 past :: UTCTime
 past = UTCTime (ModifiedJulianDay 56200) (secondsToDiffTime 0)
 
@@ -206,6 +211,8 @@ newCookie name value = Cookie { cookie_name = name
                  , cookie_secure_only = False
                  , cookie_http_only = True
                  }
+
+--}
 
 doSimplerGetRequest :: String -> RequestHeaders -> IO (String, [Cookie])
 doSimplerGetRequest url requestHeadersList = do
