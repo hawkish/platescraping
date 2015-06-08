@@ -8,12 +8,12 @@ executable licenseplate
   hs-source-dirs:  src
   build-depends:   base>=4.8
                  , tagsoup==0.13.3
-                 , HTTP==4000.2.19
-                 , http-conduit==2.1.5
-                 , http-types==0.8.6
-                 , bytestring==0.10.6.0
-                 , split==0.1.2.3
+                 --, HTTP==4000.2.19
+                 --, http-conduit==2.1.5
+                 --, http-types==0.8.6
+                 --, bytestring==0.10.6.0
+                 --, split==0.1.2.3
                  , mtl==2.2.1
                  , parsec==3.1.9
-                 , time==1.5.0.1
-                 , network==2.6.0.2
+                 --, time==1.5.0.1
+                 --, network==2.6.0.2
