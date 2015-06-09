@@ -39,3 +39,4 @@ myParser :: Parsec.Parsec String () String
 myParser = do
   letters <- Parsec.many1 Parsec.letter
   return $ letters
+
