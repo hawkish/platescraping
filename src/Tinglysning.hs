@@ -10,7 +10,7 @@ import Data.List.Split
 import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as LB
 import qualified Data.ByteString.Char8 as B
-import Utils (following, getParameterAt, extractFst, extractSnd, extractTrd)
+import Utils (following, getParameterAt, getElementAt, extractFst, extractSnd, extractTrd)
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.List
@@ -36,6 +36,7 @@ b = "<?xml version=\"1.0\" ?>\n<?Tr-XHR-Response-Type ?>\n<content action=\"/tin
 c = "<td class=\"af_column_cell-text OraTableBorder1111\"><span id=\"content:center:bilbogenresults:bilerid:0:stelnummer\">WAUZZZ8P2AA090943</span></td><td class=\"af_column_cell-text OraTableBorder1111\">AM32511</td><td class=\"af_column_cell-text OraTableBorder1111\">AUDI</td><td class=\"af_column_cell-text OraTableBorder1111\">2009</td><td class=\"af_column_cell-text OraTableBorder1111\"></td><td class=\"af_column_cell-text OraTableBorder1111\"><a id=\"content:center:bilbogenresults:bilerid:0:visbildetaljer\" name=\"content:center:bilbogenresults:bilerid:0:visbildetaljer\" onclick=\"submitForm('j_id4',1,{source:'content:center:bilbogenresults:bilerid:0:visbildetaljer','listItem':'f2922aa1-de72-4be6-8dc2-c57610a7c4ad'});return false;\" class=\"OraLink\" href=\"#\">Vis</a></td></tr></table></td></tr></table><script type=\"text/javascript\">_uixt_content_center_bilbogenresults_bilerid=new CollectionComponent('j_id4','content:center:bilbogenresults:bilerid');</script><input type=\"hidden\" name=\"content:center:bilbogenresults:bilerid:rangeStart\" value=\"0\"></div></div>\n\n  <p></p><input id=\"content:center:bilbogenresults:j_id118\" name=\"content:center:bilbogenresults:j_id118\" type=\"submit\" value=\"(S)&oslash;g igen\" onclick=\"submitForm('j_id4',1,{source:'content:center:bilbogenresults:j_id118'});return false;\" accesskey=\"S\">\n\n<br>\n<br>\n</td>"
 
 doRequests = do
+  putStrLn "Doing first request..."
   a1 <- doFstRequest
   case a1 of
    Nothing -> return Nothing
@@ -44,6 +45,7 @@ doRequests = do
      putStrLn _afPfm
      let viewState = extractSnd a1
      let cookie = extractTrd a1
+     putStrLn "Doing second request..."
      a2 <- doSndRequest "" _afPfm viewState cookie 
      case a2 of
       Nothing -> return Nothing
@@ -51,31 +53,66 @@ doRequests = do
         let _afPfm2 = fst a2
         putStrLn _afPfm2
         let cookie = snd a2
+        putStrLn "Doing third request..."
         a3 <- doTrdRequest "WAUZZZ8P2AA090943" _afPfm2 viewState cookie
+        putStrLn viewState
+        putStrLn "Doing fourth request..."
         a4 <- doFthRequest _afPfm2 viewState cookie
-        return $ Just a4
+        case a4 of
+         Nothing -> return Nothing
+         Just a4 -> do
+           let rangeStart = extractFst a4
+           let listItemValue = extractSnd a4
+           let cookie = extractTrd a4
+           putStrLn rangeStart
+           putStrLn listItemValue
+           putStrLn "Doing fifth request..."
+           a5 <- doFfthRequest _afPfm2 rangeStart viewState listItemValue cookie
+           return $ Just a5
 
-doFfthRequest _afPfm range viewState listItem cookie = do
-  let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
+doSxthRequest :: String -> String -> [Cookie] -> IO (Maybe (String, String, [Cookie]))
+doSxthRequest _afPfm viewState cookie = do
+  let url = "https://www.tinglysning.dk/tinglysning/common/visdokument/visdokument.xhtml"
   let requestHeaders = [
           ("Host","www.tinglysning.dk"),
           ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
           ("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"),
           ("Accept-Language", "en-GB,en;q=0.5"),
           ("Accept-Encoding", "gzip, deflate"),
-          ("Referer", B.pack(url)),
+          ("Referer", "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"),
           ("Connection", "keep-alive"),
           ("Pragma", "no-cache"),
           ("Cache-Control", "no-cache")]
+  response <- try $ doGetRequest url requestHeaders _afPfm viewState cookie :: IO (Either SomeException (String, [Cookie]))
+  case response of
+   Left ex -> do
+     putStrLn $ show ex
+     return Nothing
+   Right response -> do
+     return $ procFthResponse response
+
+doFfthRequest :: String -> String -> String -> String -> [Cookie] -> IO (Maybe (String, [Cookie]))
+doFfthRequest _afPfm rangeStart viewState listItemValue cookie = do
+  let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
+  let referer = url ++ "?" ++ _afPfm
+  putStrLn viewState
+  let requestHeaders = [
+          ("Host","www.tinglysning.dk"),
+          ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
+          ("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"),
+          ("Accept-Language", "en-GB,en;q=0.5"),
+          ("Accept-Encoding", "gzip, deflate"),
+          ("Referer", B.pack(referer)),
+          ("Connection", "keep-alive")]
   let body = [
-        ("content:center:bilbogenresults:bilerid:rangeStart", B.pack(range)),
+        ("content:center:bilbogenresults:bilerid:rangeStart", B.pack(rangeStart)),
         ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
         ("_noJavaScript", "false"),
         ("javax.faces.ViewState", B.pack(viewState)),
         ("source","content:center:bilbogenresults:bilerid:0:visbildetaljer"),
         ("state", ""),
         ("value", ""),
-        ("listItem", B.pack(listItem))]
+        ("listItem", B.pack(listItemValue))]
   response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (String, [Cookie]))
   case response of
    Left ex -> do
@@ -84,6 +121,7 @@ doFfthRequest _afPfm range viewState listItem cookie = do
    Right response -> do
      return $ Just response
 
+doFthRequest :: String -> String -> [Cookie] -> IO (Maybe (String, String, [Cookie]))
 doFthRequest _afPfm viewState cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
   let requestHeaders = [
@@ -102,8 +140,17 @@ doFthRequest _afPfm viewState cookie = do
      putStrLn $ show ex
      return Nothing
    Right response -> do
-     return $ Just response 
+     return $ procFthResponse response
 
+procFthResponse ::  (String, [Cookie]) -> Maybe (String, String, [Cookie])
+procFthResponse response = do
+  let html = fst response
+  let cookieList = snd response
+  rangeStart <- filterInputRangeStart html
+  listItemValue <- getListItemValue html
+  return (rangeStart, listItemValue, cookieList)
+
+doTrdRequest :: String -> String -> String -> [Cookie] -> IO (Maybe (String, [Cookie]))
 doTrdRequest vin _afPfm viewState cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
@@ -135,7 +182,7 @@ doTrdRequest vin _afPfm viewState cookie = do
    Right response -> do
      return $ Just response
 
-
+doSndRequest :: String -> String -> String -> [Cookie] -> IO (Maybe (String, [Cookie]))
 doSndRequest vin _afPfm viewState cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
@@ -218,6 +265,21 @@ filterAnchor a = case listToMaybe $ filter (~== ("<a name=content:center:bilboge
                  Nothing -> Nothing
                  Just result -> Just (fromAttrib "onclick" result)
 
+
+getListItemValue :: String -> Maybe String
+getListItemValue a = do
+  a1 <- filterAnchor a
+  let elem = splitOn "'" a1
+  indexListItem <- elemIndex "listItem" elem
+  let indexListItemValue = indexListItem + 2
+  a2 <- getElementAt elem indexListItemValue
+  return a2
+
+filterInputRangeStart :: String -> Maybe String
+filterInputRangeStart a = case listToMaybe $ filter (~== ("<input name=content:center:bilbogenresults:bilerid:rangeStart" :: String)) $ filter (isTagOpenName "input") (parseTags a) of
+                 Nothing -> Nothing
+                 Just result -> Just (fromAttrib "value" result)
+
 {--
 past :: UTCTime
 past = UTCTime (ModifiedJulianDay 56200) (secondsToDiffTime 0)
@@ -243,6 +305,7 @@ newCookie name value = Cookie { cookie_name = name
 
 doSimplerGetRequest :: String -> RequestHeaders -> IO (String, [Cookie])
 doSimplerGetRequest url requestHeadersList = do
+  putStrLn url
   initReq <- parseUrl url
   let req = initReq {
         secure = True
@@ -255,8 +318,10 @@ doSimplerGetRequest url requestHeadersList = do
   return (LB.unpack $ responseBody resp, cookieList)
 
 doGetRequest :: String -> RequestHeaders -> String -> String -> [Cookie] -> IO (String, [Cookie])
-doGetRequest url requestHeadersList _afPfm viewState cookie = do
-  initReq <- parseUrl $ url ++ "?" ++ _afPfm
+doGetRequest baseUrl requestHeadersList _afPfm viewState cookie = do
+  let url = baseUrl ++ "?" ++ _afPfm
+  putStrLn url
+  initReq <- parseUrl url
   let req = initReq {
         secure = True
         , method = "GET"
@@ -269,8 +334,10 @@ doGetRequest url requestHeadersList _afPfm viewState cookie = do
   return (LB.unpack $ responseBody resp, cookieList)
 
 doPostRequest :: String -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> String -> [Cookie] -> IO (String, [Cookie])
-doPostRequest url requestHeadersList body _afPfm cookie = do
-  initReq <- parseUrl $ url ++ "?" ++ _afPfm
+doPostRequest baseUrl requestHeadersList body _afPfm cookie = do
+  let url = baseUrl ++ "?" ++ _afPfm
+  putStrLn url
+  initReq <- parseUrl url
   let req' = initReq {
         secure = True
         , method = "POST"
@@ -278,9 +345,11 @@ doPostRequest url requestHeadersList body _afPfm cookie = do
         , cookieJar = Just $ createCookieJar cookie
         --, cookieJar = Just $ createCookieJar [newcookie] 
         , requestHeaders = requestHeadersList
+        , redirectCount = 0
         }
   let req = urlEncodedBody body $ req'
   resp <- withManager $ httpLbs req
+  
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
   return (LB.unpack $ responseBody resp, cookieList)

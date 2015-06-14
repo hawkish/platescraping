@@ -3,7 +3,10 @@
 module Scratch () where
 
 import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
+import Utils (getElementAt)
 import Data.Maybe
+import Data.List.Split
+import Data.List
 import qualified Text.Parsec as Parsec
 
 -- I am the error message infix operator, used later:
@@ -34,6 +37,17 @@ filterInput :: String -> Maybe String
 filterInput a = case listToMaybe $ filter (~== ("<input name=content:center:bilbogenresults:bilerid:rangeStart" :: String)) $ filter (isTagOpenName "input") (parseTags a) of
                  Nothing -> Nothing
                  Just result -> Just (fromAttrib "value" result)
+
+
+getListItemValue :: String -> Maybe String
+getListItemValue a = do
+  a1 <- filterAnchor a
+  let elem = splitOn "'" a1
+  indexListItem <- elemIndex "listItem" elem
+  let indexListItemValue = indexListItem + 2
+  a2 <- getElementAt elem indexListItemValue
+  return a2
+
 
 myParser :: Parsec.Parsec String () String
 myParser = do

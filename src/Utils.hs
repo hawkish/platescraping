@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (following, getParameterAt, extractFst, extractSnd, extractTrd) where
+module Utils (following, getParameterAt, getElementAt, extractFst, extractSnd, extractTrd) where
 
 import Data.List.Split
 import Control.Exception
@@ -35,11 +35,13 @@ getParametersAsString :: String -> Maybe String
 getParametersAsString a = listToMaybe . drop 1 $ splitOn "?" a
 
 getParameterAt' :: String -> Int -> Maybe String
-getParameterAt' a n = if n > limit
-                     then Nothing
-                     else Just $ list !! n
-                          where list = splitOn "&" a
-                                limit = length list - 1
+getParameterAt' a n = getElementAt list n
+                      where list = splitOn "&" a
+                         
+getElementAt :: [a] -> Int -> Maybe a
+getElementAt a n = if n > length a - 1
+                      then Nothing
+                      else Just $ a !! n
 
 -- Avoiding case expression ladder with Monad. 
 getParameterAt :: String -> Int -> Maybe String
@@ -55,25 +57,6 @@ getCookie a = do
   a3 <- listToMaybe . drop 1 $ splitOn "=" a2
   return a3
                                 
-{--
-getParametersAsString2 :: Maybe String -> Maybe String
-getParametersAsString2 a =
-  case a of
-       Nothing -> Nothing
-       Just a -> firstMaybe . drop 1 $ splitOn "?" a
-
-getFirstParameter'2 :: Maybe String -> Maybe String
-getFirstParameter'2 a =
-  case a of
-   Nothing -> Nothing
-   Just a -> firstMaybe $ splitOn "&" a
-
--- Avoiding case expression ladder with Functor. 
-getFirstParameter2 :: Maybe String -> Maybe String
---getFirstParameter2 = fmap getFirstParameter'2 getParametersAsString2  
-getFirstParameter2 = getFirstParameter'2 <$> getParametersAsString2  
---}
-
 myParser :: Parsec.Parsec String () String
 myParser = do
   letters <- Parsec.many1 Parsec.letter
