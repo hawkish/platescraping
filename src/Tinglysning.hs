@@ -51,7 +51,6 @@ doRequests = do
       Just a2 -> do
         let (_afPfm2, cookieList) = a2
         putStrLn _afPfm2
-        --let cookie = snd a2
         -- Maintaining viewState as is.
         putStrLn "Doing third request..."
         a3 <- doTrdRequest "WAUZZZ8P2AA090943" _afPfm2 viewState cookieList
