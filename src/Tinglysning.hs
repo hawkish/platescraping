@@ -35,6 +35,28 @@ b = "<?xml version=\"1.0\" ?>\n<?Tr-XHR-Response-Type ?>\n<content action=\"/tin
 
 c = "<td class=\"af_column_cell-text OraTableBorder1111\"><span id=\"content:center:bilbogenresults:bilerid:0:stelnummer\">WAUZZZ8P2AA090943</span></td><td class=\"af_column_cell-text OraTableBorder1111\">AM32511</td><td class=\"af_column_cell-text OraTableBorder1111\">AUDI</td><td class=\"af_column_cell-text OraTableBorder1111\">2009</td><td class=\"af_column_cell-text OraTableBorder1111\"></td><td class=\"af_column_cell-text OraTableBorder1111\"><a id=\"content:center:bilbogenresults:bilerid:0:visbildetaljer\" name=\"content:center:bilbogenresults:bilerid:0:visbildetaljer\" onclick=\"submitForm('j_id4',1,{source:'content:center:bilbogenresults:bilerid:0:visbildetaljer','listItem':'f2922aa1-de72-4be6-8dc2-c57610a7c4ad'});return false;\" class=\"OraLink\" href=\"#\">Vis</a></td></tr></table></td></tr></table><script type=\"text/javascript\">_uixt_content_center_bilbogenresults_bilerid=new CollectionComponent('j_id4','content:center:bilbogenresults:bilerid');</script><input type=\"hidden\" name=\"content:center:bilbogenresults:bilerid:rangeStart\" value=\"0\"></div></div>\n\n  <p></p><input id=\"content:center:bilbogenresults:j_id118\" name=\"content:center:bilbogenresults:j_id118\" type=\"submit\" value=\"(S)&oslash;g igen\" onclick=\"submitForm('j_id4',1,{source:'content:center:bilbogenresults:j_id118'});return false;\" accesskey=\"S\">\n\n<br>\n<br>\n</td>"
 
+d = "<h4 class=\"header\">OPLYSNINGER FRA MOTORREGISTER. HVIS INGEN OPLYSNINGER, FINDES K\195\152RET\195\152JET IKKE I DMR:</h4>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">M\195\166rke:</td>\n<td class=\"right\">AUDI A3 2,0 TDI</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">\195\133rgang:</td>\n<td class=\"right\">2009</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Registreringsnummer:</td>\n<td class=\"right\">AM32511</td>\n</tr>\n</tbody>\n</table>\n<div class=\"linefeed\">&#160;</div>\n<hr class=\"long\"/>\n<h2 class=\"subheader\">H\195\134FTELSER</h2>\n<hr class=\"heading\"/>\n<h4 class=\"header\">DOKUMENT:</h4>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Dato/l\195\184benummer:</td>\n<td class=\"right\">13.05.2014-1005340550</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Prioritet:</td>\n<td class=\"right\">1</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Dokument type:</td>\n<td class=\"right\">Ejendomsforbehold</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Hovedstol:</td>\n<td class=\"right\">100.080 DKK</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Rentesats:</td>\n<td class=\"right\">3,95 %</td>\n</tr>\n</tbody>\n</table>\n<div class=\"linefeed\">&#160;</div>\n<div class=\"linefeed\">&#160;</div>\n<hr class=\"heading\"/>\n<h4 class=\"header\">KREDITORER:</h4>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Navn:</td>\n<td class=\"right\">NORDEA FINANS DANMARK A/S</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">CVR:</td>\n<td class=\"right\">89805910</td>\n</tr>\n</tbody>\n</table>\n<div class=\"linefeed\">&#160;</div>\n<hr class=\"heading\"/>\n<h4 class=\"header\">DEBITORER:</h4>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Navn:</td>\n<td class=\"right\">Shahid Hussain Shah</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">CPR:</td>\n<td class=\"right\">010460-****</td>\n</tr>\n</tbody>\n</table>"
+
+
+data Motorregister = Motorregister {brand :: String,
+                                    year :: Int,
+                                    vin :: String}
+
+data Document = Document {date :: String,
+                          mortgage :: Int,
+                          documentType :: String,
+                          principal :: String,
+                          rateOfInterest :: String}
+
+data Creditor = Creditor {cname :: String,
+                          cvr :: String}
+
+data Debtor = Debtor {dname :: String,
+                      cpr :: String}
+
+data AdditionalText = AdditionalText {text :: String}
+                          
+
 doRequests = do
   putStrLn "Doing first request..."
   a1 <- doFstRequest
@@ -54,7 +76,7 @@ doRequests = do
         -- Maintaining viewState as is.
         putStrLn "Doing third request..."
         a3 <- doTrdRequest "WAUZZZ8P2AA090943" _afPfm2 viewState cookieList
-        -- a3 is a HTTP 302 redirect so moving on...
+        -- a3 is a HTTP 302 redirect. But that doesn't seem to work. So moving with the manual GET...
         putStrLn "Doing fourth request..."
         a4 <- doFrthRequest _afPfm2 viewState cookieList
         case a4 of
@@ -65,30 +87,9 @@ doRequests = do
            putStrLn listItemValue
            putStrLn "Doing fifth request..."
            a5 <- doFfthRequest _afPfm2 rangeStart viewState listItemValue cookieList
+           -- a5 is also a redirect. That works, so a5 ends up as a6
            return $ Just a5
 
-{--
-doSxthRequest :: String -> String -> [Cookie] -> IO (Maybe (String, String, [Cookie]))
-doSxthRequest _afPfm viewState cookie = do
-  let url = "https://www.tinglysning.dk/tinglysning/common/visdokument/visdokument.xhtml"
-  let requestHeaders = [
-          ("Host","www.tinglysning.dk"),
-          ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
-          ("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"),
-          ("Accept-Language", "en-GB,en;q=0.5"),
-          ("Accept-Encoding", "gzip, deflate"),
-          ("Referer", "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"),
-          ("Connection", "keep-alive"),
-          ("Pragma", "no-cache"),
-          ("Cache-Control", "no-cache")]
-  response <- try $ doGetRequest url requestHeaders _afPfm viewState cookie :: IO (Either SomeException (String, [Cookie]))
-  case response of
-   Left ex -> do
-     putStrLn $ show ex
-     return Nothing
-   Right response -> do
-     return $ procFthResponse response
---}
 doFfthRequest :: String -> String -> String -> String -> [Cookie] -> IO (Maybe (String, [Cookie]))
 doFfthRequest _afPfm rangeStart viewState listItemValue cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
@@ -344,7 +345,7 @@ doPostRequest baseUrl requestHeadersList body _afPfm cookie = do
         , method = "POST"
         , cookieJar = Just $ createCookieJar cookie
         , requestHeaders = requestHeadersList
-        , redirectCount = 0
+        , redirectCount = 1
         }
   let req = urlEncodedBody body $ req'
   resp <- withManager $ httpLbs req
