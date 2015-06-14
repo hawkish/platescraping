@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (following, getParameterAt, getElementAt, extractFst, extractSnd, extractTrd) where
+module Utils (following, getParameterAt, getElementAt, extractFst, extractSnd, extractTrd, extractFrth) where
 
 import Data.List.Split
 import Control.Exception
@@ -71,4 +71,6 @@ extractSnd (_,b,_) = b
 extractTrd :: (a, b, c) -> c
 extractTrd (_,_,c) = c
 
+extractFrth :: (a, b, c, d) -> d
+extractFrth (_,_,_,d) = d
 
