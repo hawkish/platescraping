@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
+import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, maybeTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
 import Network.HTTP.Conduit
 import Network.HTTP.Types.Header
 import Control.Exception
@@ -92,7 +92,11 @@ doRequests = do
            putStrLn "Doing fifth request..."
            a5 <- doFfthRequest _afPfm2 rangeStart viewState listItemValue cookieList
            -- a5 is also a redirect. That works, so a5 ends up as a6
-           return $ Just a5
+           case a5 of
+            Nothing -> return Nothing
+            Just a5 -> do
+              let (html, cookieList) = a5
+              return $ Just $ getTagTexts html
 
 doFfthRequest :: String -> String -> String -> String -> [Cookie] -> IO (Maybe (String, [Cookie]))
 doFfthRequest _afPfm rangeStart viewState listItemValue cookie = do
@@ -271,6 +275,16 @@ filterAnchor a = case listToMaybe $ filter (~== ("<a name=content:center:bilboge
                  Nothing -> Nothing
                  Just result -> Just (fromAttrib "onclick" result)
 
+filterInputRangeStart :: String -> Maybe String
+filterInputRangeStart a = case listToMaybe $ filter (~== ("<input name=content:center:bilbogenresults:bilerid:rangeStart" :: String)) $ filter (isTagOpenName "input") (parseTags a) of
+                 Nothing -> Nothing
+                 Just result -> Just (fromAttrib "value" result)
+
+getTagTexts :: String -> [String]
+getTagTexts = dequote . map f . filter isTagText . parseTags 
+  where f = unwords . words . fromTagText
+        dequote = filter (not . null)
+
 
 getListItemValue :: String -> Maybe String
 getListItemValue a = do
@@ -281,10 +295,6 @@ getListItemValue a = do
   a2 <- getElementAt elem indexListItemValue
   return a2
 
-filterInputRangeStart :: String -> Maybe String
-filterInputRangeStart a = case listToMaybe $ filter (~== ("<input name=content:center:bilbogenresults:bilerid:rangeStart" :: String)) $ filter (isTagOpenName "input") (parseTags a) of
-                 Nothing -> Nothing
-                 Just result -> Just (fromAttrib "value" result)
 
 {--
 past :: UTCTime
