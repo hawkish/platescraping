@@ -56,7 +56,6 @@ data Debtor = Debtor {dname :: String,
 
 data AdditionalText = AdditionalText {text :: String}
                           
-
 doRequests = do
   putStrLn "Doing first request..."
   a1 <- doFstRequest
