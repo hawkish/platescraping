@@ -41,7 +41,7 @@ data Tinglysning = Tinglysning {motorregister :: Motorregister,
                                 document :: Document,
                                 creditor :: Creditor,
                                 debtor :: Debtor,
-                                additionalText : AdditionalText}
+                                additionalText :: AdditionalText}
 
 data Motorregister = Motorregister {brand :: String,
                                     year :: Int,
