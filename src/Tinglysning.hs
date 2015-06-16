@@ -10,7 +10,7 @@ import Data.List.Split
 import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as LB
 import qualified Data.ByteString.Char8 as B
-import Utils (following, getParameterAt, getElementAt, extractFst, extractSnd, extractTrd, extractFrth)
+import Utils (following, getParameterAt, getElementAt, getTagTexts)
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.List
@@ -280,12 +280,6 @@ filterInputRangeStart a = case listToMaybe $ filter (~== ("<input name=content:c
                  Nothing -> Nothing
                  Just result -> Just (fromAttrib "value" result)
 
-getTagTexts :: String -> [String]
-getTagTexts = dequote . map f . filter isTagText . parseTags 
-  where f = unwords . words . fromTagText
-        dequote = filter (not . null)
-
-
 getListItemValue :: String -> Maybe String
 getListItemValue a = do
   a1 <- filterAnchor a
@@ -363,7 +357,6 @@ doPostRequest baseUrl requestHeadersList body _afPfm cookie = do
         }
   let req = urlEncodedBody body $ req'
   resp <- withManager $ httpLbs req
-  
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
   return (LB.unpack $ responseBody resp, cookieList)

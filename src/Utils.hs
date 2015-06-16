@@ -1,11 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (following, getParameterAt, getElementAt, extractFst, extractSnd, extractTrd, extractFrth) where
+module Utils (following, getParameterAt, getElementAt, getTagTexts) where
 
 import Data.List.Split
 import Control.Exception
 import Data.List
 import Data.Maybe
 import qualified Text.Parsec as Parsec
+import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
 
 -- I am the error message infix operator, used later:
 import Text.Parsec ((<?>))
@@ -62,15 +63,12 @@ myParser = do
   letters <- Parsec.many1 Parsec.letter
   return $ letters
 
-extractFst :: (a, b, c) -> a
-extractFst (a,_,_) = a
+-- Take all relevant tagTexts from the HTML tag soup. Yeah, it's a convoluted process...
+getTagTexts :: String -> [String]
+getTagTexts = dequote . map f . filter isTagText . parseTags 
+  where f = unwords . words . fromTagText
+        dequote = filter (not . null)
 
-extractSnd :: (a, b, c) -> b
-extractSnd (_,b,_) = b
 
-extractTrd :: (a, b, c) -> c
-extractTrd (_,_,c) = c
 
-extractFrth :: (a, b, c, d) -> d
-extractFrth (_,_,_,d) = d
 
