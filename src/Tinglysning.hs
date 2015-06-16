@@ -10,6 +10,8 @@ import Data.List.Split
 import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as LB
 import qualified Data.ByteString.Char8 as B
+import qualified Data.Text as T
+import qualified Data.Text.Lazy.Encoding as LT
 import Utils (following, getParameterAt, getElementAt, getTagTexts)
 import Control.Monad
 import Control.Monad.Trans
@@ -96,9 +98,9 @@ doRequests = do
             Nothing -> return Nothing
             Just a5 -> do
               let (html, cookieList) = a5
-              return $ Just $ getTagTexts html
+              return $ Just html
 
-doFfthRequest :: String -> String -> String -> String -> [Cookie] -> IO (Maybe (String, [Cookie]))
+doFfthRequest :: String -> String -> String -> String -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
 doFfthRequest _afPfm rangeStart viewState listItemValue cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
   let referer = url ++ "?" ++ _afPfm
@@ -121,7 +123,7 @@ doFfthRequest _afPfm rangeStart viewState listItemValue cookie = do
         ("state", ""),
         ("value", ""),
         ("listItem", B.pack(listItemValue))]
-  response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (String, [Cookie]))
+  response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (T.Text, [Cookie]))
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -142,7 +144,7 @@ doFrthRequest _afPfm viewState cookie = do
           ("Connection", "keep-alive"),
           ("Pragma", "no-cache"),
           ("Cache-Control", "no-cache")]
-  response <- try $ doGetRequest url requestHeaders _afPfm viewState cookie :: IO (Either SomeException (String, [Cookie]))
+  response <- try $ doGetRequest url requestHeaders _afPfm viewState cookie :: IO (Either SomeException (T.Text, [Cookie]))
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -343,7 +345,7 @@ doGetRequest baseUrl requestHeadersList _afPfm viewState cookie = do
   let cookieList = destroyCookieJar cookieJar
   return (LB.unpack $ responseBody resp, cookieList)
 
-doPostRequest :: String -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> String -> [Cookie] -> IO (String, [Cookie])
+doPostRequest :: String -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> String -> [Cookie] -> IO (T.Text, [Cookie])
 doPostRequest baseUrl requestHeadersList body _afPfm cookie = do
   let url = baseUrl ++ "?" ++ _afPfm
   putStrLn url
@@ -359,5 +361,5 @@ doPostRequest baseUrl requestHeadersList body _afPfm cookie = do
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
-  return (LB.unpack $ responseBody resp, cookieList)
+  return (LT.decodeUtf8 ( LB.fromChunks ( responseBody resp)), cookieList)
   
