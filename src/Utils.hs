@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (following, getParameterAt, getElementAt, getTagStrings, getTagTexts) where
+module Utils (getElementAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts) where
 
 import Data.List.Split
 import Control.Exception
@@ -32,11 +32,37 @@ t = "<h4 class=\"header\">OPLYSNINGER FRA MOTORREGISTER. HVIS INGEN OPLYSNINGER,
 
 e = T.pack t
 
-following :: Eq a => a -> [a] -> Maybe a
-following a b = do
+getElementAfter :: Eq a => a -> [a] -> Maybe a
+getElementAfter a b = do
   index <- elemIndex a b
-  result <- listToMaybe $ drop (index+1) b
+  result <- getElementAfter' index b 
   return result
+
+--getElementsAfter :: Eq a => a -> [a] -> [Maybe a]
+getElementsAfter a b = do
+  indices <- elemIndices a b
+  let result = getElementsAfter' indices b
+  return result
+
+getElementsAfter' :: [Int] -> [a] -> [Maybe a]
+getElementsAfter' [] list = []
+getElementsAfter' (x:xs) list = listToMaybe (drop x list):getElementsAfter' xs list
+
+  
+  
+  
+getElementAfter' :: Int -> [b] -> Maybe b
+getElementAfter' index list = do
+  result <- listToMaybe $ drop (index+1) list
+  return result
+
+
+-- Avoiding case expression ladder with Monad. 
+getParameterAt :: T.Text -> Int -> Maybe T.Text
+getParameterAt a n = do
+  a1 <- getParametersAsString a
+  a2 <- getParameterAt' a1 n
+  return a2
 
 getParametersAsString :: T.Text -> Maybe T.Text
 getParametersAsString a = listToMaybe . drop 1 $ T.splitOn "?" a
@@ -49,13 +75,6 @@ getElementAt :: [a] -> Int -> Maybe a
 getElementAt a n = if n > length a - 1
                       then Nothing
                       else Just $ a !! n
-
--- Avoiding case expression ladder with Monad. 
-getParameterAt :: T.Text -> Int -> Maybe T.Text
-getParameterAt a n = do
-  a1 <- getParametersAsString a
-  a2 <- getParameterAt' a1 n
-  return a2
 
 getCookie :: String -> Maybe String
 getCookie a = do
