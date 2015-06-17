@@ -8,6 +8,7 @@ import Utils (getElementAt, getTagTexts)
 import Data.Maybe
 import Data.List.Split
 import Data.List
+import qualified Data.ByteString.Char8 as B
 import qualified Data.Text    as T
 import qualified Data.Text.IO as T
 import qualified Data.Text.Encoding as TE
