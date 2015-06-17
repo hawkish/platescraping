@@ -32,12 +32,11 @@ t = "<h4 class=\"header\">OPLYSNINGER FRA MOTORREGISTER. HVIS INGEN OPLYSNINGER,
 
 e = T.pack t
 
-following :: Eq a => a -> [a] -> [a]
-following a b =
-  case elemIndex a b of
-   Nothing -> b
-   Just index -> if result == [] then b else result
-                                         where result = drop (index+1) b
+following :: Eq a => a -> [a] -> Maybe a
+following a b = do
+  index <- elemIndex a b
+  result <- listToMaybe $ drop (index+1) b
+  return result
 
 getParametersAsString :: T.Text -> Maybe T.Text
 getParametersAsString a = listToMaybe . drop 1 $ T.splitOn "?" a
