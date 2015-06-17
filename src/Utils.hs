@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 module Utils (following, getParameterAt, getElementAt, getTagStrings, getTagTexts) where
 
@@ -38,12 +39,12 @@ following a b =
    Just index -> if result == [] then b else result
                                          where result = drop (index+1) b
 
-getParametersAsString :: String -> Maybe String
-getParametersAsString a = listToMaybe . drop 1 $ splitOn "?" a
+getParametersAsString :: T.Text -> Maybe T.Text
+getParametersAsString a = listToMaybe . drop 1 $ T.splitOn "?" a
 
-getParameterAt' :: String -> Int -> Maybe String
+getParameterAt' :: T.Text -> Int -> Maybe T.Text
 getParameterAt' a n = getElementAt list n
-                      where list = splitOn "&" a
+                      where list = T.splitOn "&" a
                          
 getElementAt :: [a] -> Int -> Maybe a
 getElementAt a n = if n > length a - 1
@@ -51,7 +52,7 @@ getElementAt a n = if n > length a - 1
                       else Just $ a !! n
 
 -- Avoiding case expression ladder with Monad. 
-getParameterAt :: String -> Int -> Maybe String
+getParameterAt :: T.Text -> Int -> Maybe T.Text
 getParameterAt a n = do
   a1 <- getParametersAsString a
   a2 <- getParameterAt' a1 n

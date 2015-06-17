@@ -81,7 +81,7 @@ doRequests = do
         putStrLn _afPfm2
         -- Maintaining viewState as is.
         putStrLn "Doing third request..."
-        a3 <- doTrdRequest "WAUZZZ8P2AA090943" _afPfm2 viewState cookieList
+        a3 <- doTrdRequest (T.pack "WAUZZZ8P2AA090943") _afPfm2 viewState cookieList
         -- a3 is a HTTP 302 redirect. But that doesn't seem to work. So moving with the manual GET...
         putStrLn "Doing fourth request..."
         a4 <- doFrthRequest _afPfm2 viewState cookieList
@@ -100,7 +100,7 @@ doRequests = do
               let (html, cookieList) = a5
               return $ Just html
 
-doFfthRequest :: String -> String -> String -> String -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
+doFfthRequest :: T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
 doFfthRequest _afPfm rangeStart viewState listItemValue cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
   let referer = url ++ "?" ++ _afPfm
@@ -131,7 +131,7 @@ doFfthRequest _afPfm rangeStart viewState listItemValue cookie = do
    Right response -> do
      return $ Just response
 
-doFrthRequest :: String -> String -> [Cookie] -> IO (Maybe (String, String, String, [Cookie]))
+doFrthRequest :: T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, T.Text, T.Text, [Cookie]))
 doFrthRequest _afPfm viewState cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
   let requestHeaders = [
@@ -152,7 +152,7 @@ doFrthRequest _afPfm viewState cookie = do
    Right response -> do
      return $ procFrthResponse response
 
-procFrthResponse ::  (String, [Cookie]) -> Maybe (String, String, String, [Cookie])
+procFrthResponse ::  (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, T.Text, [Cookie])
 procFrthResponse response = do
   let html = fst response
   let cookieList = snd response
@@ -161,7 +161,7 @@ procFrthResponse response = do
   listItemValue <- getListItemValue html
   return (viewState, rangeStart, listItemValue, cookieList)
 
-doTrdRequest :: String -> String -> String -> [Cookie] -> IO (Maybe (String, [Cookie]))
+doTrdRequest :: T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
 doTrdRequest vin _afPfm viewState cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
@@ -185,7 +185,7 @@ doTrdRequest vin _afPfm viewState cookie = do
         ("_noJavaScript", "false"),
         ("javax.faces.ViewState", B.pack(viewState)),
         ("source","content:center:bilbogen:j_id150")]
-  response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (String, [Cookie]))
+  response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (T.Text, [Cookie]))
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -193,7 +193,7 @@ doTrdRequest vin _afPfm viewState cookie = do
    Right response -> do
      return $ Just response
 
-doSndRequest :: String -> String -> [Cookie] -> IO (Maybe (String, [Cookie]))
+doSndRequest :: T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
 doSndRequest _afPfm viewState cookie = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
@@ -228,15 +228,15 @@ doSndRequest _afPfm viewState cookie = do
    Right response -> do
      return $ procSndResponse response
 
-procSndResponse :: (String, [Cookie]) -> Maybe (String, [Cookie])
+procSndResponse :: (T.Text, [Cookie]) -> Maybe (T.Text, [Cookie])
 procSndResponse response = do
-  a1 <- filterContent $ fst response
+  a1 <- filterXMLContent $ fst response
   _afPfm <- getParameterAt a1 0
   let cookieList = snd response
   return (_afPfm, cookieList)
 
 
-doFstRequest :: IO (Maybe (String, String, [Cookie]))
+doFstRequest :: IO (Maybe (T.Text, T.Text, [Cookie]))
 doFstRequest = do
   let url = "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
@@ -249,7 +249,7 @@ doFstRequest = do
    Right response -> do
      return $ procFstResponse response 
 
-procFstResponse :: (String, [Cookie]) -> Maybe (String, String, [Cookie])
+procFstResponse :: (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, [Cookie])
 procFstResponse response = do
   a1 <- filterForm $ fst response
   _afPfm <- getParameterAt a1 0
@@ -257,35 +257,35 @@ procFstResponse response = do
   viewState <- filterInputViewState $ fst response
   return (_afPfm, viewState, cookieList)
 
-filterForm :: String -> Maybe String
+filterForm :: T.Text -> Maybe T.Text
 filterForm a = case listToMaybe $ filter (isTagOpenName "form") (parseTags a) of
                Nothing -> Nothing
                Just result -> Just (fromAttrib "action" result)
 
-filterInputViewState :: String -> Maybe String
+filterInputViewState :: T.Text -> Maybe T.Text
 filterInputViewState a = case listToMaybe $ filter (~== ("<input name=javax.faces.ViewState" :: String)) $ filter (isTagOpenName "input") (parseTags a) of
                  Nothing -> Nothing
                  Just result -> Just (fromAttrib "value" result)
 
-filterContent :: String -> Maybe String
-filterContent a = case listToMaybe $ filter (isTagOpenName "content") (parseTags a) of
+filterXMLContent :: T.Text -> Maybe T.Text
+filterXMLContent a = case listToMaybe $ filter (isTagOpenName "content") (parseTags a) of
                Nothing -> Nothing
                Just result -> Just (fromAttrib "action" result)
 
-filterAnchor :: String -> Maybe String
+filterAnchor :: T.Text -> Maybe T.Text
 filterAnchor a = case listToMaybe $ filter (~== ("<a name=content:center:bilbogenresults:bilerid:0:visbildetaljer" :: String)) $ filter (isTagOpenName "a") (parseTags a) of
                  Nothing -> Nothing
                  Just result -> Just (fromAttrib "onclick" result)
 
-filterInputRangeStart :: String -> Maybe String
+filterInputRangeStart :: T.Text -> Maybe T.Text
 filterInputRangeStart a = case listToMaybe $ filter (~== ("<input name=content:center:bilbogenresults:bilerid:rangeStart" :: String)) $ filter (isTagOpenName "input") (parseTags a) of
                  Nothing -> Nothing
                  Just result -> Just (fromAttrib "value" result)
 
-getListItemValue :: String -> Maybe String
+getListItemValue :: T.Text -> Maybe T.Text
 getListItemValue a = do
   a1 <- filterAnchor a
-  let elem = splitOn "'" a1
+  let elem = T.splitOn "'" a1
   indexListItem <- elemIndex "listItem" elem
   let indexListItemValue = indexListItem + 2
   a2 <- getElementAt elem indexListItemValue
@@ -315,7 +315,7 @@ newCookie name value = Cookie { cookie_name = name
 
 --}
 
-doSimplerGetRequest :: String -> RequestHeaders -> IO (String, [Cookie])
+doSimplerGetRequest :: String -> RequestHeaders -> IO (T.Text, [Cookie])
 doSimplerGetRequest url requestHeadersList = do
   putStrLn url
   initReq <- parseUrl url
@@ -327,9 +327,10 @@ doSimplerGetRequest url requestHeadersList = do
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
-  return (LB.unpack $ responseBody resp, cookieList)
+  return (LT.decodeUtf8 (LB.fromChunks (responseBody resp)), cookieList)
 
-doGetRequest :: String -> RequestHeaders -> String -> String -> [Cookie] -> IO (String, [Cookie])
+
+doGetRequest :: String -> RequestHeaders -> String -> String -> [Cookie] -> IO (T.Text, [Cookie])
 doGetRequest baseUrl requestHeadersList _afPfm viewState cookie = do
   let url = baseUrl ++ "?" ++ _afPfm
   putStrLn url
@@ -343,7 +344,8 @@ doGetRequest baseUrl requestHeadersList _afPfm viewState cookie = do
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
-  return (LB.unpack $ responseBody resp, cookieList)
+  return (LT.decodeUtf8 (LB.fromChunks (responseBody resp)), cookieList)
+
 
 doPostRequest :: String -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> String -> [Cookie] -> IO (T.Text, [Cookie])
 doPostRequest baseUrl requestHeadersList body _afPfm cookie = do
