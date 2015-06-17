@@ -39,14 +39,14 @@ getElementAfter a b = do
   return result
 
 --getElementsAfter :: Eq a => a -> [a] -> [Maybe a]
-getElementsAfter a b = do
-  indices <- elemIndices a b
-  let result = getElementsAfter' indices b
-  return result
+--getElementsAfter a b = do
+--  indices <- elemIndices a b
+--  let result = getElementsAfter' indices b
+--  return result
 
-getElementsAfter' :: [Int] -> [a] -> [Maybe a]
-getElementsAfter' [] list = []
-getElementsAfter' (x:xs) list = listToMaybe (drop x list):getElementsAfter' xs list
+--getElementsAfter' :: [Int] -> [a] -> [Maybe a]
+--getElementsAfter' [] list = []
+--getElementsAfter' (x:xs) list = listToMaybe (drop x list):getElementsAfter' xs list
 
   
   

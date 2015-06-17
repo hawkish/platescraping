@@ -11,8 +11,9 @@ import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as LB
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text as T
-import qualified Data.Text.Lazy.Encoding as LT
-import Utils (following, getParameterAt, getElementAt, getTagTexts)
+import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Lazy.Encoding as LTE
+import Utils (getElementAfter, getParameterAt, getElementAt, getTagTexts)
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.List
@@ -70,15 +71,12 @@ doRequests = do
    Nothing -> return Nothing
    Just a1 -> do
      let (_afPfm, viewState, cookieList) = a1
-     putStrLn _afPfmo
-     putStrLn viewState
      putStrLn "Doing second request..."
      a2 <- doSndRequest _afPfm viewState cookieList 
      case a2 of
       Nothing -> return Nothing
       Just a2 -> do
         let (_afPfm2, cookieList) = a2
-        putStrLn _afPfm2
         -- Maintaining viewState as is.
         putStrLn "Doing third request..."
         a3 <- doTrdRequest (T.pack "WAUZZZ8P2AA090943") _afPfm2 viewState cookieList
@@ -89,8 +87,6 @@ doRequests = do
          Nothing -> return Nothing
          Just a4 -> do
            let (viewState, rangeStart, listItemValue, cookieList) = a4
-           putStrLn rangeStart
-           putStrLn listItemValue
            putStrLn "Doing fifth request..."
            a5 <- doFfthRequest _afPfm2 rangeStart viewState listItemValue cookieList
            -- a5 is also a redirect. That works, so a5 ends up as a6
@@ -104,25 +100,23 @@ doFfthRequest :: T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (
 doFfthRequest _afPfm rangeStart viewState listItemValue cookie = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
   let referer = url `T.append` (T.pack "?") `T.append` _afPfm
-  putStrLn viewState
-  putStrLn referer
   let requestHeaders = [
           ("Host","www.tinglysning.dk"),
           ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
           ("Accept", "text/html,application/xhtml+xml;application/xml;q=0.9,*/*;q=0.8"),
           ("Accept-Language", "en-GB,en;q=0.5"),
           ("Accept-Encoding", "gzip, deflate"),
-          ("Referer", LT.encodeUtf8(referer)),
+          ("Referer", TE.encodeUtf8(referer)),
           ("Connection", "keep-alive")]
   let body = [
-        ("content:center:bilbogenresults:bilerid:rangeStart", B.pack(rangeStart)),
+        ("content:center:bilbogenresults:bilerid:rangeStart", TE.encodeUtf8(rangeStart)),
         ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
         ("_noJavaScript", "false"),
-        ("javax.faces.ViewState", T.encodeUtf8(viewState)),
+        ("javax.faces.ViewState", TE.encodeUtf8(viewState)),
         ("source","content:center:bilbogenresults:bilerid:0:visbildetaljer"),
         ("state", ""),
         ("value", ""),
-        ("listItem", T.encodeUtf8(listItemValue))]
+        ("listItem", TE.encodeUtf8(listItemValue))]
   response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (T.Text, [Cookie]))
   case response of
    Left ex -> do
@@ -170,20 +164,20 @@ doTrdRequest vin _afPfm viewState cookie = do
           ("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"),
           ("Accept-Language", "en-GB,en;q=0.5"),
           ("Accept-Encoding", "gzip, deflate"),
-          ("Referer", LT.encodeUtf8(url)),
+          ("Referer", TE.encodeUtf8(url)),
           ("Connection", "keep-alive"),
           ("Pragma", "no-cache"),
           ("Cache-Control", "no-cache")]
   let body = [
         ("soegemaade", "content:center:bilbogen:stelnrOption"),
-        ("content:center:bilbogen:stelnr", LT.encodeUtf8(vin)),
+        ("content:center:bilbogen:stelnr", TE.encodeUtf8(vin)),
         ("content:center:bilbogen:cvr", ""),
         ("content:center:bilbogen:navn", ""),
         ("content:center:bilbogen:foedselsdato", ""),
         ("bogsattest", "content:center:bilbogen:uofficiel"),
         ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
         ("_noJavaScript", "false"),
-        ("javax.faces.ViewState", LT.encodeUtf8(viewState)),
+        ("javax.faces.ViewState", TE.encodeUtf8(viewState)),
         ("source","content:center:bilbogen:j_id150")]
   response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (T.Text, [Cookie]))
   case response of
@@ -202,7 +196,7 @@ doSndRequest _afPfm viewState cookie = do
           ("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8"),
           ("Accept-Language", "en-GB,en;q=0.5"),
           ("Accept-Encoding", "gzip, deflate"),
-          ("Referer", LT.encodeUtf8(url)),
+          ("Referer", TE.encodeUtf8(url)),
           ("Tr-XHR-Message","true"),
           ("Connection", "keep-alive"),
           ("Pragma", "no-cache"),
@@ -216,7 +210,7 @@ doSndRequest _afPfm viewState cookie = do
         ("bogsattest", "content:center:bilbogen:uofficiel"),
         ("org.apache.myfaces.trinidad.faces.FORM", "j_id4"),
         ("_noJavaScript", "false"),
-        ("javax.faces.ViewState", LT.encodeUtf8(viewState)),
+        ("javax.faces.ViewState", TE.encodeUtf8(viewState)),
         ("source","content:center:bilbogen:stelnrOption"),
         ("event","autosub"),
         ("partial","true")]
@@ -317,7 +311,6 @@ newCookie name value = Cookie { cookie_name = name
 
 doSimplerGetRequest :: T.Text -> RequestHeaders -> IO (T.Text, [Cookie])
 doSimplerGetRequest url requestHeadersList = do
-  putStrLn url
   initReq <- parseUrl $ T.unpack url
   let req = initReq {
         secure = True
@@ -327,13 +320,12 @@ doSimplerGetRequest url requestHeadersList = do
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
-  return (LT.decodeUtf8 (LB.fromChunks (responseBody resp)), cookieList)
+  return (T.pack $ LB.unpack $ responseBody resp, cookieList)
 
 
 doGetRequest :: T.Text -> RequestHeaders -> T.Text -> T.Text -> [Cookie] -> IO (T.Text, [Cookie])
 doGetRequest baseUrl requestHeadersList _afPfm viewState cookie = do
   let url = baseUrl `T.append` (T.pack "?") `T.append` _afPfm
-  putStrLn url
   initReq <- parseUrl $ T.unpack url
   let req = initReq {
         secure = True
@@ -344,13 +336,12 @@ doGetRequest baseUrl requestHeadersList _afPfm viewState cookie = do
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
-  return (LT.decodeUtf8 (LB.fromChunks (responseBody resp)), cookieList)
+  return (T.pack $ LB.unpack $ responseBody resp, cookieList)
 
 
 doPostRequest :: T.Text -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> T.Text -> [Cookie] -> IO (T.Text, [Cookie])
 doPostRequest baseUrl requestHeadersList body _afPfm cookie = do
   let url = baseUrl `T.append` (T.pack "?") `T.append` _afPfm
-  putStrLn url
   initReq <- parseUrl $ T.unpack url
   let req' = initReq {
         secure = True
@@ -363,5 +354,5 @@ doPostRequest baseUrl requestHeadersList body _afPfm cookie = do
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
-  return (LT.decodeUtf8 ( LB.fromChunks ( responseBody resp)), cookieList)
+  return (T.pack $ LB.unpack $ responseBody resp, cookieList)
   
