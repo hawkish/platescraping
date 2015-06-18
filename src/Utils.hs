@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (getElementAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts) where
+module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts) where
 
 import Data.List.Split
 import Control.Exception
@@ -38,24 +38,20 @@ getElementAfter a b = do
   result <- getElementAfter' index b 
   return result
 
---getElementsAfter :: Eq a => a -> [a] -> [Maybe a]
---getElementsAfter a b = do
---  indices <- elemIndices a b
---  let result = getElementsAfter' indices b
---  return result
-
---getElementsAfter' :: [Int] -> [a] -> [Maybe a]
---getElementsAfter' [] list = []
---getElementsAfter' (x:xs) list = listToMaybe (drop x list):getElementsAfter' xs list
-
-  
-  
-  
 getElementAfter' :: Int -> [b] -> Maybe b
 getElementAfter' index list = do
   result <- listToMaybe $ drop (index+1) list
   return result
 
+getElementsAfter :: (Eq a) => a -> [a] -> [Maybe a]
+getElementsAfter a b = do
+  let indices = elemIndices a b
+  let result = getElementsAfter' indices b
+  getElementsAfter' indices b
+
+getElementsAfter' :: [Int] -> [a] -> [Maybe a]
+getElementsAfter' [] list = []
+getElementsAfter' (x:xs) list = listToMaybe (drop (x+1) list) : getElementsAfter' xs list
 
 -- Avoiding case expression ladder with Monad. 
 getParameterAt :: T.Text -> Int -> Maybe T.Text

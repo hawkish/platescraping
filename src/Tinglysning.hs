@@ -40,30 +40,85 @@ c = "<td class=\"af_column_cell-text OraTableBorder1111\"><span id=\"content:cen
 
 d = "<h4 class=\"header\">OPLYSNINGER FRA MOTORREGISTER. HVIS INGEN OPLYSNINGER, FINDES K\195\152RET\195\152JET IKKE I DMR:</h4>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">M\195\166rke:</td>\n<td class=\"right\">AUDI A3 2,0 TDI</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">\195\133rgang:</td>\n<td class=\"right\">2009</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Registreringsnummer:</td>\n<td class=\"right\">AM32511</td>\n</tr>\n</tbody>\n</table>\n<div class=\"linefeed\">&#160;</div>\n<hr class=\"long\"/>\n<h2 class=\"subheader\">H\195\134FTELSER</h2>\n<hr class=\"heading\"/>\n<h4 class=\"header\">DOKUMENT:</h4>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Dato/l\195\184benummer:</td>\n<td class=\"right\">13.05.2014-1005340550</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Prioritet:</td>\n<td class=\"right\">1</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Dokument type:</td>\n<td class=\"right\">Ejendomsforbehold</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Hovedstol:</td>\n<td class=\"right\">100.080 DKK</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Rentesats:</td>\n<td class=\"right\">3,95 %</td>\n</tr>\n</tbody>\n</table>\n<div class=\"linefeed\">&#160;</div>\n<div class=\"linefeed\">&#160;</div>\n<hr class=\"heading\"/>\n<h4 class=\"header\">KREDITORER:</h4>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Navn:</td>\n<td class=\"right\">NORDEA FINANS DANMARK A/S</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">CVR:</td>\n<td class=\"right\">89805910</td>\n</tr>\n</tbody>\n</table>\n<div class=\"linefeed\">&#160;</div>\n<hr class=\"heading\"/>\n<h4 class=\"header\">DEBITORER:</h4>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Navn:</td>\n<td class=\"right\">Shahid Hussain Shah</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">CPR:</td>\n<td class=\"right\">010460-****</td>\n</tr>\n</tbody>\n</table>"
 
-data Tinglysning = Tinglysning {motorregister :: Motorregister,
-                                document :: Document,
-                                creditor :: Creditor,
-                                debtor :: Debtor,
-                                additionalText :: AdditionalText}
+data Tinglysning = Tinglysning { motorregister :: Motorregister
+                               , document :: Document
+                               , creditor :: Creditor
+                               , debtor :: Debtor
+                               , additionalText :: AdditionalText
+                               } deriving (Eq, Show, Read)
 
-data Motorregister = Motorregister {brand :: T.Text,
-                                    year :: Int,
-                                    vin :: T.Text}
+data Motorregister = Motorregister { brand :: T.Text
+                                   , year :: Int
+                                   , license :: T.Text
+                                   } deriving (Eq, Show, Read)
 
-data Document = Document {date :: T.Text,
-                          mortgage :: Int,
-                          documentType :: T.Text,
-                          principal :: T.Text,
-                          rateOfInterest :: T.Text}
+data Document = Document { date :: T.Text
+                         , mortgage :: Int
+                         , documentType :: T.Text
+                         , principal :: T.Text
+                         , rateOfInterest :: T.Text
+                         } deriving (Eq, Show, Read)
 
-data Creditor = Creditor {cname :: T.Text,
-                          cvr :: T.Text}
+data Creditor = Creditor { cname :: T.Text
+                         , cvr :: T.Text
+                         } deriving (Eq, Show, Read)
 
-data Debtor = Debtor {dname :: T.Text,
-                      cpr :: T.Text}
 
-data AdditionalText = AdditionalText {text :: T.Text}
-                          
+data Debtor = Debtor { dname :: T.Text
+                     , cpr :: T.Text
+                     } deriving (Eq, Show, Read)
+
+data AdditionalText = AdditionalText { text :: T.Text } deriving (Eq, Show, Read)
+
+getTextAfter :: T.Text -> T.Text -> Maybe T.Text
+getTextAfter a b = getElementAfter a $ getTagTexts b
+
+getTextsAfter :: T.Text -> T.Text -> [Maybe T.Text]
+getTextsAfter a b = getElementsAfter a $ getTagTexts b
+
+getMotorregisterBrand :: T.Text -> Maybe T.Text
+getMotorregisterBrand a = getTextAfter (T.pack "Mærke:") a
+
+getMotorregisterYear :: T.Text -> Maybe T.Text
+getMotorregisterYear a = getTextAfter (T.pack "Årgang:") a
+
+getMotorregisterLicense :: T.Text -> Maybe T.Text
+getMotorregisterLicense a = getTextAfter (T.pack "Registreringsnummer:") a
+
+getDocumentDate :: T.Text -> Maybe T.Text
+getDocumentDate a = getTextAfter (T.pack "Dato/løbenummer:") a
+
+getDocumentDocumentType :: T.Text -> Maybe T.Text
+getDocumentDocumentType a = getTextAfter (T.pack "Dokument type:") a
+
+getDocumentMortgage :: T.Text -> Maybe T.Text
+getDocumentMortgage a = getTextAfter (T.pack "Prioritet:") a
+
+getDocumentPrincipal :: T.Text -> Maybe T.Text
+getDocumentPrincipal a = getTextAfter (T.pack "Hovedstol:") a
+
+getDocumentRateOfInterest :: T.Text -> Maybe T.Text
+getDocumentRateOfInterest a = getTextAfter (T.pack "Rentesats:") a
+
+getDebtorName :: T.Text -> Maybe T.Text
+getDebtorName a = do
+  let names = getTextsAfter (T.pack "Navn:") a
+  name <- getElementAt names 1
+  return $ fromJust name
+
+getDebtorCPR :: T.Text -> Maybe T.Text
+getDebtorCPR a = getTextAfter (T.pack "CPR:") a
+
+getCreditorName :: T.Text -> Maybe T.Text
+getCreditorName a = do
+  let names = getTextsAfter (T.pack "Navn:") a
+  name <- getElementAt names 0
+  return $ fromJust name
+
+getCreditorCVR :: T.Text -> Maybe T.Text
+getCreditorCVR a = getTextAfter (T.pack "CVR:") a
+
+
 doRequests = do
   putStrLn "Doing first request..."
   a1 <- doFstRequest
