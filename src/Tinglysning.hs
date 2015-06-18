@@ -13,7 +13,7 @@ import qualified Data.ByteString.Char8 as B
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy.Encoding as LTE
-import Utils (getElementAfter, getParameterAt, getElementAt, getTagTexts)
+import Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagTexts)
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.List
