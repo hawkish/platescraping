@@ -9,6 +9,7 @@ import Utils (getElementAfter, getElementsAfter, getElementAt, getTagTexts)
 import Data.Maybe
 import Data.List.Split
 import Data.List
+import qualified Data.ByteString.Lazy.Char8 as LB
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text    as T
 import qualified Data.Text.IO as T
