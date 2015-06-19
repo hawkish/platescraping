@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UnicodeSyntax #-}
-module LandRegisterTypes (initCreditor, initDebtor, initMotorregister, initDocument, initAdditionalText, Creditor, Debtor, Motorregister, Document, AdditionalText) where
+module LandRegisterTypes (initCreditor, initDebtor, initMotorregister, initDocument, initAdditionalText, initLandRegister, Creditor, Debtor, Motorregister, Document, AdditionalText, LandRegister) where
 
 import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
 import Utils (getElementAfter, getElementsAfter, getElementAt, getTagTexts)
