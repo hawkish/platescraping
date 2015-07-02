@@ -9,10 +9,13 @@ import Data.List
 import Data.List.Split
 import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as LB
+import qualified Data.ByteString.Lazy as LBL
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text as T
+--import qualified Data.Text.Internal.Lazy as TL
 import qualified Data.Text.Encoding as TE
-import qualified Data.Text.Lazy.Encoding as LTE
+import qualified Data.Text.Lazy.Encoding as TLE
+import qualified Data.Text.Lazy as TL
 import Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagTexts)
 import LandRegisterTypes (initCreditor, initDebtor, initMotorregister, initDocument, initAdditionalText, initLandRegister, Creditor, Debtor, Motorregister, Document, AdditionalText, LandRegister)
 import Control.Monad
@@ -298,7 +301,7 @@ doSimplerGetRequest url requestHeadersList = do
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
-  return (T.pack $ LB.unpack $ responseBody resp, cookieList)
+  return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp, cookieList)
 
 
 doGetRequest :: T.Text -> RequestHeaders -> T.Text -> T.Text -> [Cookie] -> IO (T.Text, [Cookie])
@@ -314,7 +317,7 @@ doGetRequest baseUrl requestHeadersList _afPfm viewState cookie = do
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
-  return (T.pack $ LB.unpack $ responseBody resp, cookieList)
+  return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp, cookieList)
 
 
 doPostRequest :: T.Text -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> T.Text -> [Cookie] -> IO (T.Text, [Cookie])
@@ -332,5 +335,5 @@ doPostRequest baseUrl requestHeadersList body _afPfm cookie = do
   resp <- withManager $ httpLbs req
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
-  return (T.pack $ LB.unpack $ responseBody resp, cookieList)
+  return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp, cookieList)
   
