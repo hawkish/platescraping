@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
+module Tinglysning (doRequests) where
+
 import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, maybeTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
 import Network.HTTP.Conduit
 import Network.HTTP.Types.Header
@@ -118,6 +120,7 @@ doFrthRequest _afPfm viewState cookie = do
           ("Pragma", "no-cache"),
           ("Cache-Control", "no-cache")]
   response <- try $ doGetRequest url requestHeaders _afPfm viewState cookie :: IO (Either SomeException (T.Text, [Cookie]))
+  putStrLn "Done fourth request."
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -159,6 +162,7 @@ doTrdRequest vin _afPfm viewState cookie = do
         ("javax.faces.ViewState", TE.encodeUtf8(viewState)),
         ("source","content:center:bilbogen:j_id150")]
   response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (T.Text, [Cookie]))
+  putStrLn "Done third request."
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -194,6 +198,7 @@ doSndRequest _afPfm viewState cookie = do
         ("event","autosub"),
         ("partial","true")]
   response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (T.Text, [Cookie]))
+  putStrLn "Done second request."
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -215,6 +220,7 @@ doFstRequest = do
   let requestHeaders = [
           ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]
   response <- try $ doSimplerGetRequest url requestHeaders :: IO (Either SomeException (T.Text, [Cookie]))
+  putStrLn "Done first request."
   case response of
    Left ex -> do
      putStrLn $ show ex
