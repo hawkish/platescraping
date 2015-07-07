@@ -6,9 +6,11 @@ module Tinglysning (doRequests) where
 import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, maybeTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
 import Network.HTTP.Conduit
 import Network.HTTP.Types.Header
+--import Network.HTTP.Client (defaultManagerSettings)
 import Control.Exception
 import Data.List
 import Data.List.Split
+import Data.Conduit
 import Data.Char
 import qualified Data.ByteString.Lazy.Char8 as LB
 import qualified Data.ByteString.Lazy as LBL
@@ -46,39 +48,49 @@ d = "<h4 class=\"header\">OPLYSNINGER FRA MOTORREGISTER. HVIS INGEN OPLYSNINGER,
 
 doRequests :: IO (Maybe LandRegister)
 doRequests = do
+  manager <- liftIO $ newManager conduitManagerSettings 
   putStrLn "Doing first request..."
-  a1 <- doFstRequest
+  a1 <- doFstRequest manager
   case a1 of
-   Nothing -> return Nothing
+   Nothing -> do
+     closeManager manager
+     return Nothing
    Just a1 -> do
      let (_afPfm, viewState, cookieList) = a1
      putStrLn "Doing second request..."
-     a2 <- doSndRequest _afPfm viewState cookieList 
+     a2 <- doSndRequest manager _afPfm viewState cookieList 
      case a2 of
-      Nothing -> return Nothing
+      Nothing -> do
+        closeManager manager
+        return Nothing
       Just a2 -> do
         let (_afPfm2, cookieList) = a2
         -- Maintaining viewState as is.
         putStrLn "Doing third request..."
-        a3 <- doTrdRequest (T.pack "WAUZZZ8P2AA090943") _afPfm2 viewState cookieList
+        a3 <- doTrdRequest manager (T.pack "WAUZZZ8P2AA090943") _afPfm2 viewState cookieList
         -- a3 is a HTTP 302 redirect. But that doesn't seem to work. So moving with the manual GET...
         putStrLn "Doing fourth request..."
-        a4 <- doFrthRequest _afPfm2 viewState cookieList
+        a4 <- doFrthRequest manager _afPfm2 viewState cookieList
         case a4 of
-         Nothing -> return Nothing
+         Nothing -> do
+           closeManager manager
+           return Nothing
          Just a4 -> do
            let (viewState, rangeStart, listItemValue, cookieList) = a4
            putStrLn "Doing fifth request..."
-           a5 <- doFfthRequest _afPfm2 rangeStart viewState listItemValue cookieList
+           a5 <- doFfthRequest manager _afPfm2 rangeStart viewState listItemValue cookieList
            -- a5 is also a redirect. That works, so a5 ends up as a6
            case a5 of
-            Nothing -> return Nothing
+            Nothing -> do
+              closeManager manager
+              return Nothing
             Just a5 -> do
+              closeManager manager
               let (html, cookieList) = a5
               return $ Just $ initLandRegister html
 
-doFfthRequest :: T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
-doFfthRequest _afPfm rangeStart viewState listItemValue cookie = do
+doFfthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
+doFfthRequest manager _afPfm rangeStart viewState listItemValue cookie = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
   let referer = url `T.append` (T.pack "?") `T.append` _afPfm
   let requestHeaders = [
@@ -98,7 +110,7 @@ doFfthRequest _afPfm rangeStart viewState listItemValue cookie = do
         ("state", ""),
         ("value", ""),
         ("listItem", TE.encodeUtf8(listItemValue))]
-  response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (T.Text, [Cookie]))
+  response <- try $ doPostRequest manager url requestHeaders body _afPfm cookie :: IO (Either SomeException (T.Text, [Cookie]))
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -106,8 +118,8 @@ doFfthRequest _afPfm rangeStart viewState listItemValue cookie = do
    Right response -> do
      return $ Just response
 
-doFrthRequest :: T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, T.Text, T.Text, [Cookie]))
-doFrthRequest _afPfm viewState cookie = do
+doFrthRequest :: Manager -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, T.Text, T.Text, [Cookie]))
+doFrthRequest manager _afPfm viewState cookie = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
   let requestHeaders = [
           ("Host","www.tinglysning.dk"),
@@ -119,7 +131,7 @@ doFrthRequest _afPfm viewState cookie = do
           ("Connection", "keep-alive"),
           ("Pragma", "no-cache"),
           ("Cache-Control", "no-cache")]
-  response <- try $ doGetRequest url requestHeaders _afPfm viewState cookie :: IO (Either SomeException (T.Text, [Cookie]))
+  response <- try $ doGetRequest manager url requestHeaders _afPfm viewState cookie :: IO (Either SomeException (T.Text, [Cookie]))
   putStrLn "Done fourth request."
   case response of
    Left ex -> do
@@ -137,8 +149,8 @@ procFrthResponse response = do
   listItemValue <- getListItemValue html
   return (viewState, rangeStart, listItemValue, cookieList)
 
-doTrdRequest :: T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
-doTrdRequest vin _afPfm viewState cookie = do
+doTrdRequest :: Manager -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
+doTrdRequest manager vin _afPfm viewState cookie = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
           ("Host","www.tinglysning.dk"),
@@ -161,7 +173,7 @@ doTrdRequest vin _afPfm viewState cookie = do
         ("_noJavaScript", "false"),
         ("javax.faces.ViewState", TE.encodeUtf8(viewState)),
         ("source","content:center:bilbogen:j_id150")]
-  response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (T.Text, [Cookie]))
+  response <- try $ doPostRequest manager url requestHeaders body _afPfm cookie :: IO (Either SomeException (T.Text, [Cookie]))
   putStrLn "Done third request."
   case response of
    Left ex -> do
@@ -170,8 +182,8 @@ doTrdRequest vin _afPfm viewState cookie = do
    Right response -> do
      return $ Just response
 
-doSndRequest :: T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
-doSndRequest _afPfm viewState cookie = do
+doSndRequest :: Manager -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
+doSndRequest manager _afPfm viewState cookie = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
           ("Host","www.tinglysning.dk"),
@@ -197,7 +209,7 @@ doSndRequest _afPfm viewState cookie = do
         ("source","content:center:bilbogen:stelnrOption"),
         ("event","autosub"),
         ("partial","true")]
-  response <- try $ doPostRequest url requestHeaders body _afPfm cookie :: IO (Either SomeException (T.Text, [Cookie]))
+  response <- try $ doPostRequest manager url requestHeaders body _afPfm cookie :: IO (Either SomeException (T.Text, [Cookie]))
   putStrLn "Done second request."
   case response of
    Left ex -> do
@@ -214,12 +226,12 @@ procSndResponse response = do
   return (_afPfm, cookieList)
 
 
-doFstRequest :: IO (Maybe (T.Text, T.Text, [Cookie]))
-doFstRequest = do
+doFstRequest :: Manager -> IO (Maybe (T.Text, T.Text, [Cookie]))
+doFstRequest manager = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
           ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0")]
-  response <- try $ doSimplerGetRequest url requestHeaders :: IO (Either SomeException (T.Text, [Cookie]))
+  response <- try $ doSimplerGetRequest manager url requestHeaders :: IO (Either SomeException (T.Text, [Cookie]))
   putStrLn "Done first request."
   case response of
    Left ex -> do
@@ -294,40 +306,40 @@ newCookie name value = Cookie { cookie_name = name
 
 --}
 
-doSimplerGetRequest :: T.Text -> RequestHeaders -> IO (T.Text, [Cookie])
-doSimplerGetRequest url requestHeadersList = do
-  initReq <- parseUrl $ T.unpack url
+doSimplerGetRequest :: Manager -> T.Text -> RequestHeaders -> IO (T.Text, [Cookie])
+doSimplerGetRequest manager url requestHeadersList = do
+  initReq <- liftIO $ parseUrl $ T.unpack url
   let req = initReq {
         secure = True
         , method = "GET"
         , requestHeaders = requestHeadersList
         }
-  resp <- withManager $ httpLbs req
+  resp <- httpLbs req manager
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
   return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp, cookieList)
 
 
-doGetRequest :: T.Text -> RequestHeaders -> T.Text -> T.Text -> [Cookie] -> IO (T.Text, [Cookie])
-doGetRequest baseUrl requestHeadersList _afPfm viewState cookie = do
+doGetRequest :: Manager -> T.Text -> RequestHeaders -> T.Text -> T.Text -> [Cookie] -> IO (T.Text, [Cookie])
+doGetRequest manager baseUrl requestHeadersList _afPfm viewState cookie = do
   let url = baseUrl `T.append` (T.pack "?") `T.append` _afPfm
-  initReq <- parseUrl $ T.unpack url
+  initReq <- liftIO $ parseUrl $ T.unpack url
   let req = initReq {
         secure = True
         , method = "GET"
         , cookieJar = Just $ createCookieJar cookie
         , requestHeaders = requestHeadersList
         }
-  resp <- withManager $ httpLbs req
+  resp <- httpLbs req manager
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
   return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp, cookieList)
 
 
-doPostRequest :: T.Text -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> T.Text -> [Cookie] -> IO (T.Text, [Cookie])
-doPostRequest baseUrl requestHeadersList body _afPfm cookie = do
+doPostRequest :: Manager -> T.Text -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> T.Text -> [Cookie] -> IO (T.Text, [Cookie])
+doPostRequest manager baseUrl requestHeadersList body _afPfm cookie = do
   let url = baseUrl `T.append` (T.pack "?") `T.append` _afPfm
-  initReq <- parseUrl $ T.unpack url
+  initReq <- liftIO $ parseUrl $ T.unpack url
   let req' = initReq {
         secure = True
         , method = "POST"
@@ -336,7 +348,7 @@ doPostRequest baseUrl requestHeadersList body _afPfm cookie = do
         , redirectCount = 1
         }
   let req = urlEncodedBody body $ req'
-  resp <- withManager $ httpLbs req
+  resp <- httpLbs req manager 
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
   return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp, cookieList)

@@ -9,8 +9,10 @@ executable licenseplate
   build-depends:   base>=4.8
                  , tagsoup==0.13.3
                  , HTTP==4000.2.19
+                 , conduit==1.2.4.2
                  , http-conduit==2.1.5
                  , http-types==0.8.6
+                 , http-client==0.4.13
                  , bytestring==0.10.6.0
                  , split==0.1.2.3
                  , mtl==2.2.1
