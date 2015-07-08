@@ -6,7 +6,6 @@ module Tinglysning (doRequests) where
 import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, maybeTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
 import Network.HTTP.Conduit
 import Network.HTTP.Types.Header
---import Network.HTTP.Client (defaultManagerSettings)
 import Control.Exception
 import Data.List
 import Data.List.Split
@@ -16,7 +15,6 @@ import qualified Data.ByteString.Lazy.Char8 as LB
 import qualified Data.ByteString.Lazy as LBL
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text as T
---import qualified Data.Text.Internal.Lazy as TL
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL

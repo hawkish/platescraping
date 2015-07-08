@@ -9,9 +9,12 @@ import Data.List
 import Data.List.Split
 import Data.Char
 import Data.Maybe
+import Control.Monad.Trans
 import qualified Data.Text as T
 import qualified Data.ByteString.Lazy.Char8 as LB
 import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Lazy.Encoding as TLE
+import qualified Data.Text.Lazy as TL
 import Utils (getElementAfter, getTagTexts)
 
 
@@ -47,27 +50,23 @@ isDigitOrUpperLetter a
 --}
 getHTMLTrafikStyrelsen :: T.Text -> IO (Maybe T.Text)
 getHTMLTrafikStyrelsen a = do
+  manager <- liftIO $ newManager conduitManagerSettings
   let baseUrl = T.pack "http://selvbetjening.trafikstyrelsen.dk/Sider/resultater.aspx?Reg="
   let url = baseUrl `T.append` a
-  html <- try $ doGetRequest url :: IO (Either SomeException T.Text)
+  html <- try $ doGetRequest manager url :: IO (Either SomeException T.Text)
   case html of
    Left ex -> do
      putStrLn $ show ex
      return Nothing
    Right html -> return $ Just html
 
-doGetRequest :: T.Text -> IO T.Text
-doGetRequest url = do
-  initReq <- parseUrl $ T.unpack url
+doGetRequest :: Manager -> T.Text -> IO T.Text
+doGetRequest manager url = do
+  initReq <- liftIO $ parseUrl $ T.unpack url
   let req = initReq {
         method = "GET"
         }
-  resp <- withManager $ httpLbs req
-  return $ T.pack $ LB.unpack $ responseBody resp
+  resp <- httpLbs req manager
+  return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp)
 
---doGetRequest :: String -> IO String
---doGetRequest url = do
-  --resp <- simpleHTTP $ getRequest url
-  --html <- getResponseBody resp
-  --return html
 
