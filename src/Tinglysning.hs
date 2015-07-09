@@ -44,9 +44,8 @@ c = "<td class=\"af_column_cell-text OraTableBorder1111\"><span id=\"content:cen
 
 d = "<h4 class=\"header\">OPLYSNINGER FRA MOTORREGISTER. HVIS INGEN OPLYSNINGER, FINDES K\195\152RET\195\152JET IKKE I DMR:</h4>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">M\195\166rke:</td>\n<td class=\"right\">AUDI A3 2,0 TDI</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">\195\133rgang:</td>\n<td class=\"right\">2009</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Registreringsnummer:</td>\n<td class=\"right\">AM32511</td>\n</tr>\n</tbody>\n</table>\n<div class=\"linefeed\">&#160;</div>\n<hr class=\"long\"/>\n<h2 class=\"subheader\">H\195\134FTELSER</h2>\n<hr class=\"heading\"/>\n<h4 class=\"header\">DOKUMENT:</h4>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Dato/l\195\184benummer:</td>\n<td class=\"right\">13.05.2014-1005340550</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Prioritet:</td>\n<td class=\"right\">1</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Dokument type:</td>\n<td class=\"right\">Ejendomsforbehold</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Hovedstol:</td>\n<td class=\"right\">100.080 DKK</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Rentesats:</td>\n<td class=\"right\">3,95 %</td>\n</tr>\n</tbody>\n</table>\n<div class=\"linefeed\">&#160;</div>\n<div class=\"linefeed\">&#160;</div>\n<hr class=\"heading\"/>\n<h4 class=\"header\">KREDITORER:</h4>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Navn:</td>\n<td class=\"right\">NORDEA FINANS DANMARK A/S</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">CVR:</td>\n<td class=\"right\">89805910</td>\n</tr>\n</tbody>\n</table>\n<div class=\"linefeed\">&#160;</div>\n<hr class=\"heading\"/>\n<h4 class=\"header\">DEBITORER:</h4>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">Navn:</td>\n<td class=\"right\">Shahid Hussain Shah</td>\n</tr>\n</tbody>\n</table>\n<table>\n<tbody>\n<tr>\n<td class=\"left\">CPR:</td>\n<td class=\"right\">010460-****</td>\n</tr>\n</tbody>\n</table>"
 
-doRequests :: IO (Maybe LandRegister)
-doRequests = do
-  let vin = "WAUZZZ8P2AA090943"
+doRequests :: T.Text -> IO (Maybe LandRegister)
+doRequests vin = do
   manager <- liftIO $ newManager conduitManagerSettings 
   putStrLn "Doing first request..."
   a1 <- doFstRequest manager
@@ -55,6 +54,7 @@ doRequests = do
      closeManager manager
      return Nothing
    Just a1 -> do
+     putStrLn "First processing done."
      let (_afPfm, viewState, cookieList) = a1
      putStrLn "Doing second request..."
      a2 <- doSndRequest manager _afPfm viewState cookieList 1 
@@ -63,6 +63,7 @@ doRequests = do
         closeManager manager
         return Nothing
       Just a2 -> do
+        putStrLn "Second processing done."
         let (_afPfm2, cookieList) = a2
         -- Maintaining viewState as is.
         putStrLn "Doing third request..."
@@ -73,6 +74,7 @@ doRequests = do
            closeManager manager
            return Nothing
          Just a3 -> do
+           putStrLn "Third processing done."
            let (viewState, rangeStart, listItemValue, cookieList) = a3
            putStrLn "Doing fourth request..."
            a4 <- doFrthRequest manager _afPfm2 rangeStart viewState listItemValue cookieList 1
@@ -96,6 +98,7 @@ doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie redirects
           ("Accept", "text/html,application/xhtml+xml;application/xml;q=0.9,*/*;q=0.8"),
           ("Accept-Language", "en-GB,en;q=0.5"),
           ("Accept-Encoding", "gzip, deflate"),
+          ("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8"),
           ("Referer", TE.encodeUtf8(referer)),
           ("Connection", "keep-alive")]
   let body = [
@@ -188,7 +191,6 @@ doSndRequest manager _afPfm viewState cookie redirects = do
         ("event","autosub"),
         ("partial","true")]
   response <- try $ doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (Either SomeException (T.Text, [Cookie]))
-  putStrLn "Done second request."
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -295,6 +297,7 @@ doSimplerGetRequest manager url requestHeadersList = do
         secure = True
         , method = "GET"
         , requestHeaders = requestHeadersList
+        , responseTimeout = Just 50000000
         }
   resp <- httpLbs req manager
   let cookieJar = responseCookieJar resp
@@ -311,6 +314,7 @@ doGetRequest manager baseUrl requestHeadersList _afPfm viewState cookie = do
         , method = "GET"
         , cookieJar = Just $ createCookieJar cookie
         , requestHeaders = requestHeadersList
+        , responseTimeout = Just 50000000
         }
   resp <- httpLbs req manager
   let cookieJar = responseCookieJar resp
@@ -328,6 +332,7 @@ doPostRequest manager baseUrl requestHeadersList body _afPfm cookie redirects = 
         , cookieJar = Just $ createCookieJar cookie
         , requestHeaders = requestHeadersList
         , redirectCount = redirects
+        , responseTimeout = Just 50000000                 
         }
   let req = urlEncodedBody body $ req'
   resp <- httpLbs req manager 
