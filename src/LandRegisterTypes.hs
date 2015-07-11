@@ -22,6 +22,7 @@ import Control.Lens
 data Motorregister = MkMotorregister { _brand :: Maybe T.Text
                                      , _year :: Maybe T.Text
                                      , _license :: Maybe T.Text
+                                     , _vin :: Maybe T.Text
                                      } deriving (Eq, Show, Read)
 
 makeLenses ''Motorregister
@@ -72,11 +73,11 @@ initDebtor a = MkDebtor { _dname = getDebtorName a, _cpr = getDebtorCPR a }
 
 initDocument a = MkDocument { _date = getDocumentDate a, _mortgage = getDocumentMortgage a, _documentType = getDocumentDocumentType a, _principal = getDocumentPrincipal a, _rateOfInterest = getDocumentRateOfInterest a }
 
-initMotorregister a = MkMotorregister { _brand = getMotorregisterBrand a, _year = getMotorregisterYear a, _license = getMotorregisterLicense a }
+initMotorregister vin a = MkMotorregister { _brand = getMotorregisterBrand a, _year = getMotorregisterYear a, _license = getMotorregisterLicense a, _vin = vin }
 
 initAdditionalText a = MkAdditionalText { _text = getAdditionalText a }
 
-initLandRegister a = MkLandRegister { _motorregister = initMotorregister a, _document = initDocument a, _creditor = initCreditor a, _debtor = initDebtor a, _additionalText = initAdditionalText a }
+initLandRegister vin a = MkLandRegister { _motorregister = initMotorregister vin a, _document = initDocument a, _creditor = initCreditor a, _debtor = initDebtor a, _additionalText = initAdditionalText a }
 
 --setCreditor c a = c & (cname .~ (getCreditorName a)) . (cvr .~ (getCreditorCVR a))
 

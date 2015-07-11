@@ -73,7 +73,7 @@ doRequests vin = do
             Just a4 -> do
               closeManager manager
               let (html, cookieList) = a4
-              return $ Just $ initLandRegister html
+              return $ Just $ initLandRegister (Just vin) html
 
 doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Maybe (T.Text, [Cookie]))
 doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie redirects = do
@@ -260,7 +260,7 @@ doSimplerGetRequest manager url requestHeadersList = do
         secure = True
         , method = "GET"
         , requestHeaders = requestHeadersList
-        , responseTimeout = Just 50000000
+        , responseTimeout = Just 100000000
         }
   resp <- httpLbs req manager
   let cookieJar = responseCookieJar resp
@@ -277,7 +277,7 @@ doGetRequest manager baseUrl requestHeadersList _afPfm viewState cookie = do
         , method = "GET"
         , cookieJar = Just $ createCookieJar cookie
         , requestHeaders = requestHeadersList
-        , responseTimeout = Just 50000000
+        , responseTimeout = Just 100000000
         }
   resp <- httpLbs req manager
   let cookieJar = responseCookieJar resp
@@ -295,7 +295,7 @@ doPostRequest manager baseUrl requestHeadersList body _afPfm cookie redirects = 
         , cookieJar = Just $ createCookieJar cookie
         , requestHeaders = requestHeadersList
         , redirectCount = redirects
-        , responseTimeout = Just 50000000                 
+        , responseTimeout = Just 100000000                 
         }
   let req = urlEncodedBody body $ req'
   resp <- httpLbs req manager 
