@@ -4,7 +4,7 @@
 module Trafikstyrelsen (getVIN) where
 
 import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
-import Network.HTTP.Conduit
+import Network.HTTP.Client
 import Network.HTTP.Types.Header
 import Control.Exception
 import Data.List
@@ -58,7 +58,7 @@ isDigitOrUpperLetter a
 
 getHTMLTrafikStyrelsen :: T.Text -> IO (Maybe T.Text)
 getHTMLTrafikStyrelsen a = do
-  manager <- liftIO $ newManager conduitManagerSettings
+  manager <- liftIO $ newManager defaultManagerSettings
   let baseUrl = T.pack "http://selvbetjening.trafikstyrelsen.dk/Sider/resultater.aspx?Reg="
   let url = baseUrl `T.append` a
   html <- try $ doGetRequest manager url :: IO (Either SomeException T.Text)

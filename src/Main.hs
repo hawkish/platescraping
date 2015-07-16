@@ -6,7 +6,7 @@ import LandRegisterTypes (LandRegister)
 import qualified Data.Text as T
 import Control.Monad.Trans
 
-main :: IO (Maybe LandRegister)
+--main :: IO (Maybe LandRegister)
 main = do
   --vin <- liftIO $ getVIN $ T.pack "AF22454"
   vin <- liftIO $ getVIN $ T.pack "AB12345"
