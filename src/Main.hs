@@ -8,8 +8,13 @@ import Control.Monad.Trans
 
 --main :: IO (Maybe LandRegister)
 main = do
-  --vin <- liftIO $ getVIN $ T.pack "AF22454"
-  vin <- liftIO $ getVIN $ T.pack "AB12345"
+  putStrLn "Please input the registration plate number:"
+  registrationnumber <- getLine
+  vin <- liftIO $ getVIN $ T.pack registrationnumber
+  --vin <- liftIO $ getVIN $ T.pack "AB12345"
   case vin of
-    Nothing -> return Nothing
-    Just vin -> doRequests vin
+    Nothing -> putStrLn "Nothing found."
+    Just vin -> do
+      landRegister <- doRequests vin
+      putStrLn $ show landRegister
+    

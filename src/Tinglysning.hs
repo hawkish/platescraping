@@ -38,6 +38,7 @@ import Network.HTTP.Types.Status (statusCode)
 
 doRequests :: T.Text -> IO (Maybe LandRegister)
 doRequests vin = withOpenSSL $ do
+--doRequests vin = do
   manager <- newManager $ opensslManagerSettings SSL.context
   --manager <- newManager tlsManagerSettings
   putStrLn "Doing first request..."
