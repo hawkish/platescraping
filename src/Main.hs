@@ -11,7 +11,6 @@ main = do
   putStrLn "Please input the registration plate number:"
   registrationnumber <- getLine
   vin <- liftIO $ getVIN $ T.pack registrationnumber
-  --vin <- liftIO $ getVIN $ T.pack "AB12345"
   case vin of
     Nothing -> putStrLn "Nothing found."
     Just vin -> do
