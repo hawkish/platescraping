@@ -7,17 +7,9 @@ import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromT
 import qualified OpenSSL.Session as SSL
 import Network.HTTP.Client
 import Network.HTTP.Client.OpenSSL
-import Network.HTTP.Client.TLS
-import Network.HTTP.Client.Internal
-import Network.Connection
 import Network.HTTP.Types.Header
 import Control.Exception
 import Data.List
-import Data.List.Split
-import Data.Conduit
-import Data.Char
-import qualified Data.ByteString.Lazy.Char8 as LB
-import qualified Data.ByteString.Lazy as LBL
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -25,16 +17,8 @@ import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
 import Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagTexts)
 import LandRegisterTypes (initCreditor, initDebtor, initMotorregister, initDocument, initAdditionalText, initLandRegister, Creditor, Debtor, Motorregister, Document, AdditionalText, LandRegister)
-import Control.Monad
 import Control.Monad.Trans
-import Control.Monad.List
-import Network
-import Data.Time.Clock
-import Data.Time.Calendar
 import Data.Maybe
-import qualified Control.Exception as E
-import Network.HTTP.Types.Status (statusCode)
-
 
 doRequests :: T.Text -> IO (Maybe LandRegister)
 doRequests vin = withOpenSSL $ do

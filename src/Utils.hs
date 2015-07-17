@@ -3,26 +3,11 @@
 module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts) where
 
 import Data.List.Split
-import Control.Exception
 import Data.List
 import Data.Maybe
 import qualified Data.Text as T
 import qualified Text.Parsec as Parsec
 import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
-
--- I am the error message infix operator, used later:
-import Text.Parsec ((<?>))
-
--- Imported so we can play with applicative things later.
--- not qualified as mostly infix operators we'll be using.
-import Control.Applicative
-
--- Get the Identity monad from here:
-import Control.Monad.Identity (Identity)
-
-import Control.Applicative
--- alias Parsec.parse for more concise usage.
-parse rule text = Parsec.parse rule "(source)" text
 
 getElementAfter :: Eq a => a -> [a] -> Maybe a
 getElementAfter a b = do

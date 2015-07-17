@@ -2,7 +2,7 @@
 
 import Trafikstyrelsen (getVIN)
 import Tinglysning (doRequests)
-import LandRegisterTypes (LandRegister)
+
 import qualified Data.Text as T
 import Control.Monad.Trans
 

@@ -4,20 +4,11 @@
 {-# LANGUAGE UnicodeSyntax #-}
 module LandRegisterTypes (initCreditor, initDebtor, initMotorregister, initDocument, initAdditionalText, initLandRegister, Creditor, Debtor, Motorregister, Document, AdditionalText, LandRegister) where
 
-import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
+
 import Utils (getElementAfter, getElementsAfter, getElementAt, getTagTexts)
 import Data.Maybe
-import Data.List.Split
-import Data.List
-import qualified Data.ByteString.Lazy.Char8 as LB
-import qualified Data.ByteString.Char8 as B
 import qualified Data.Text    as T
-import qualified Data.Text.IO as T
-import qualified Data.Text.Encoding as TE
 import Control.Lens
-
-
-
 
 data Motorregister = MkMotorregister { _brand :: Maybe T.Text
                                      , _year :: Maybe T.Text
@@ -79,10 +70,6 @@ initAdditionalText a = MkAdditionalText { _text = getAdditionalText a }
 
 initLandRegister vin a = MkLandRegister { _motorregister = initMotorregister vin a, _document = initDocument a, _creditor = initCreditor a, _debtor = initDebtor a, _additionalText = initAdditionalText a }
 
---setCreditor c a = c & (cname .~ (getCreditorName a)) . (cvr .~ (getCreditorCVR a))
-
---getCreditor c = c ^. cname
-  
 getMotorregisterBrand :: T.Text -> Maybe T.Text
 getMotorregisterBrand a = getTextAfter (T.pack "Mærke:") a
 

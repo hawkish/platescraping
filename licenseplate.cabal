@@ -24,4 +24,4 @@ executable licenseplate
                  , network==2.6.0.2
                  , lens==4.11
                  , connection==0.2.5
-  ghc-options: -O2 -threaded -rtsopts
+  ghc-options: -O2 -Wall -threaded -rtsopts

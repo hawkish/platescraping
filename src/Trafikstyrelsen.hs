@@ -3,18 +3,12 @@
 
 module Trafikstyrelsen (getVIN) where
 
-import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
+
 import Network.HTTP.Client
-import Network.HTTP.Types.Header
 import Control.Exception
-import Data.List
-import Data.List.Split
 import Data.Char
-import Data.Maybe
 import Control.Monad.Trans
 import qualified Data.Text as T
-import qualified Data.ByteString.Lazy.Char8 as LB
-import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
 import Utils (getElementAfter, getTagTexts)
