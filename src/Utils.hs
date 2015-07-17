@@ -7,7 +7,7 @@ import Data.List
 import Data.Maybe
 import qualified Data.Text as T
 import qualified Text.Parsec as Parsec
-import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
+import Text.HTML.TagSoup (parseTags, fromTagText, isTagText)
 
 getElementAfter :: Eq a => a -> [a] -> Maybe a
 getElementAfter a b = do

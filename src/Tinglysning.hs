@@ -3,7 +3,7 @@
 
 module Tinglysning (doRequests) where
 
-import Text.HTML.TagSoup (parseTags, Tag, Tag(..), (~==), (~/=), sections, fromTagText, maybeTagText, fromAttrib, isTagText, isTagOpenName, isTagOpen)
+import Text.HTML.TagSoup (parseTags, (~==), fromAttrib, isTagOpenName)
 import qualified OpenSSL.Session as SSL
 import Network.HTTP.Client
 import Network.HTTP.Client.OpenSSL
@@ -15,8 +15,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
-import Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagTexts)
-import LandRegisterTypes (initCreditor, initDebtor, initMotorregister, initDocument, initAdditionalText, initLandRegister, Creditor, Debtor, Motorregister, Document, AdditionalText, LandRegister)
+import Utils (getParameterAt, getElementAt)
+import LandRegisterTypes (initLandRegister, LandRegister)
 import Control.Monad.Trans
 import Data.Maybe
 
@@ -138,7 +138,6 @@ procTrdResponse response = do
   listItemValue <- getListItemValue html
   return (viewState, rangeStart, listItemValue, cookieList)
 
-
 doSndRequest :: Manager -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Maybe (T.Text, [Cookie]))
 doSndRequest manager _afPfm viewState cookie redirects = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
@@ -204,23 +203,6 @@ doFstRequest manager = do
      putStrLn "Processed."
      return result
 
-doFstRequest' :: Manager -> IO (Maybe (T.Text, [Cookie]))
-doFstRequest' manager = do
-  let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
-  let requestHeaders = [
-          ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
-          ("Accept", "text/html,application/xhtml+xml;application/xml;q=0.9,*/*;q=0.8"),
-          ("Accept-Language", "en-GB,en;q=0.5"),
-          ("Connection", "keep-alive")]
-  response <- try $ doSimplerGetRequest manager url requestHeaders :: IO (Either SomeException (T.Text, [Cookie]))
-  case response of
-   Left ex -> do
-     putStrLn $ show ex
-     return Nothing
-   Right response -> do
-     return $ Just response 
-
-
 procFstResponse :: (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, [Cookie])
 procFstResponse response = do
   a1 <- filterForm $ fst response
@@ -228,15 +210,6 @@ procFstResponse response = do
   let cookieList = snd response
   viewState <- filterInputViewState $ fst response
   return (_afPfm, viewState, cookieList)
-
-procFstResponse' :: (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, [Cookie])
-procFstResponse' response = do
-  a1 <- filterForm $ fst response
-  _afPfm <- getParameterAt a1 0
-  let cookieList = snd response
-  viewState <- filterInputViewState $ fst response
-  return (_afPfm, viewState, cookieList)
-
 
 filterForm :: T.Text -> Maybe T.Text
 filterForm a = case listToMaybe $ filter (isTagOpenName "form") (parseTags a) of
@@ -286,7 +259,7 @@ doSimplerGetRequest manager url requestHeadersList = do
   let cookieList = destroyCookieJar cookieJar
   return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp, cookieList)
 
-
+{--
 doGetRequest :: Manager -> T.Text -> RequestHeaders -> T.Text -> T.Text -> [Cookie] -> IO (T.Text, [Cookie])
 doGetRequest manager baseUrl requestHeadersList _afPfm viewState cookie = do
   let url = baseUrl `T.append` (T.pack "?") `T.append` _afPfm
@@ -302,7 +275,7 @@ doGetRequest manager baseUrl requestHeadersList _afPfm viewState cookie = do
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
   return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp, cookieList)
-
+--}
 
 doPostRequest :: Manager -> T.Text -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> T.Text -> [Cookie] -> Int -> IO (T.Text, [Cookie])
 doPostRequest manager baseUrl requestHeadersList body _afPfm cookie redirects = do

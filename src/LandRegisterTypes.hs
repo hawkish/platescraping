@@ -4,7 +4,6 @@
 {-# LANGUAGE UnicodeSyntax #-}
 module LandRegisterTypes (initCreditor, initDebtor, initMotorregister, initDocument, initAdditionalText, initLandRegister, Creditor, Debtor, Motorregister, Document, AdditionalText, LandRegister) where
 
-
 import Utils (getElementAfter, getElementsAfter, getElementAt, getTagTexts)
 import Data.Maybe
 import qualified Data.Text    as T
