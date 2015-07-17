@@ -18,7 +18,6 @@ executable licenseplate
                  , bytestring==0.10.6.0
                  , split==0.1.2.3
                  , mtl==2.2.1
-                 , parsec==3.1.9
                  , time==1.5.0.1
                  , text==1.2.1.1
                  , network==2.6.0.2

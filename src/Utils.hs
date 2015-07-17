@@ -6,7 +6,6 @@ import Data.List.Split
 import Data.List
 import Data.Maybe
 import qualified Data.Text as T
-import qualified Text.Parsec as Parsec
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText)
 
 getElementAfter :: Eq a => a -> [a] -> Maybe a
@@ -56,11 +55,6 @@ getCookie a = do
   a3 <- listToMaybe . drop 1 $ splitOn "=" a2
   return a3
                                 
-myParser :: Parsec.Parsec String () String
-myParser = do
-  letters <- Parsec.many1 Parsec.letter
-  return $ letters
-
 -- Take all relevant tagTexts from the HTML tag soup. Yeah, it's a convoluted process...
 getTagStrings :: String -> [String]
 getTagStrings = map T.unpack . getTagTexts . T.pack
