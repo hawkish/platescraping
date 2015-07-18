@@ -2,18 +2,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UnicodeSyntax #-}
+{-# LANGUAGE DeriveGeneric #-}
 module LandRegisterTypes (initCreditor, initDebtor, initMotorregister, initDocument, initAdditionalText, initLandRegister, Creditor, Debtor, Motorregister, Document, AdditionalText, LandRegister) where
 
 import Utils (getElementAfter, getElementsAfter, getElementAt, getTagTexts)
 import Data.Maybe
 import qualified Data.Text    as T
 import Control.Lens
+import GHC.Generics
 
 data Motorregister = MkMotorregister { _brand :: Maybe T.Text
                                      , _year :: Maybe T.Text
                                      , _license :: Maybe T.Text
                                      , _vin :: Maybe T.Text
-                                     } deriving (Eq, Show, Read)
+                                     } deriving (Eq, Show, Read, Generic)
 
 makeLenses ''Motorregister
 
@@ -22,23 +24,23 @@ data Document = MkDocument { _date :: Maybe T.Text
                            , _documentType :: Maybe T.Text
                            , _principal :: Maybe T.Text
                            , _rateOfInterest :: Maybe T.Text
-                           } deriving (Eq, Show, Read)
+                           } deriving (Eq, Show, Read, Generic)
 
 makeLenses ''Document
 
 data Creditor = MkCreditor { _cname :: Maybe T.Text
                            , _cvr :: Maybe T.Text
-                           } deriving (Eq, Show, Read)
+                           } deriving (Eq, Show, Read, Generic)
 
 makeLenses ''Creditor
 
 data Debtor = MkDebtor { _dname :: Maybe T.Text
                        , _cpr :: Maybe T.Text
-                       } deriving (Eq, Show, Read)
+                       } deriving (Eq, Show, Read, Generic)
 
 makeLenses ''Debtor
 
-data AdditionalText = MkAdditionalText { _text :: [Maybe T.Text] } deriving (Eq, Show, Read)
+data AdditionalText = MkAdditionalText { _text :: [Maybe T.Text] } deriving (Eq, Show, Read, Generic)
 
 makeLenses ''AdditionalText
 
@@ -47,7 +49,7 @@ data LandRegister = MkLandRegister { _motorregister :: Motorregister
                                    , _creditor :: Creditor
                                    , _debtor :: Debtor
                                    , _additionalText :: AdditionalText
-                                   } deriving (Eq, Show, Read)
+                                   } deriving (Eq, Show, Read, Generic)
 
 makeLenses ''LandRegister
 
