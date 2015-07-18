@@ -192,7 +192,7 @@ doFstRequest manager = do
           ("Accept", "text/html,application/xhtml+xml;application/xml;q=0.9,*/*;q=0.8"),
           ("Accept-Language", "en-GB,en;q=0.5"),
           ("Connection", "keep-alive")]
-  response <- try $ doSimplerGetRequest manager url requestHeaders :: IO (Either SomeException (T.Text, [Cookie]))
+  response <- try $ doGetRequest manager url requestHeaders :: IO (Either SomeException (T.Text, [Cookie]))
   case response of
    Left ex -> do
      putStrLn $ show ex
@@ -245,8 +245,8 @@ getListItemValue a = do
   a2 <- getElementAt elem indexListItemValue
   return a2
 
-doSimplerGetRequest :: Manager -> T.Text -> RequestHeaders -> IO (T.Text, [Cookie])
-doSimplerGetRequest manager url requestHeadersList = do
+doGetRequest :: Manager -> T.Text -> RequestHeaders -> IO (T.Text, [Cookie])
+doGetRequest manager url requestHeadersList = do
   initReq <- liftIO $ parseUrl $ T.unpack url
   let req = initReq {
         secure = True
@@ -258,24 +258,6 @@ doSimplerGetRequest manager url requestHeadersList = do
   let cookieJar = responseCookieJar resp
   let cookieList = destroyCookieJar cookieJar
   return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp, cookieList)
-
-{--
-doGetRequest :: Manager -> T.Text -> RequestHeaders -> T.Text -> T.Text -> [Cookie] -> IO (T.Text, [Cookie])
-doGetRequest manager baseUrl requestHeadersList _afPfm viewState cookie = do
-  let url = baseUrl `T.append` (T.pack "?") `T.append` _afPfm
-  initReq <- liftIO $ parseUrl $ T.unpack url
-  let req = initReq {
-        secure = True
-        , method = "GET"
-        , cookieJar = Just $ createCookieJar cookie
-        , requestHeaders = requestHeadersList
-        , responseTimeout = Just 100000000
-        }
-  resp <- httpLbs req manager
-  let cookieJar = responseCookieJar resp
-  let cookieList = destroyCookieJar cookieJar
-  return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp, cookieList)
---}
 
 doPostRequest :: Manager -> T.Text -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> T.Text -> [Cookie] -> Int -> IO (T.Text, [Cookie])
 doPostRequest manager baseUrl requestHeadersList body _afPfm cookie redirects = do
