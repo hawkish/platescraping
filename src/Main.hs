@@ -35,5 +35,7 @@ search rn = do
     Nothing -> return (TL.pack "Nothing found.")
     Just vin -> do
       landRegister <- doRequests vin
-      return $ TLE.decodeUtf8 $ encode landRegister
+      case landRegister of
+        Nothing -> return (TL.pack "Nothing found.")
+        Just landRegister -> return $ TLE.decodeUtf8 $ encode landRegister
     
