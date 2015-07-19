@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Trafikstyrelsen (getVIN)
-import Tinglysning (doRequests)
+import Tinglysning (getLandRegister)
 
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
@@ -34,7 +34,7 @@ search rn = do
   case vin of
     Nothing -> return (TL.pack "Nothing found.")
     Just vin -> do
-      landRegister <- doRequests vin
+      landRegister <- getLandRegister vin
       case landRegister of
         Nothing -> return (TL.pack "Nothing found.")
         Just landRegister -> return $ TLE.decodeUtf8 $ encode landRegister

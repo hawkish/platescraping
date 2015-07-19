@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Tinglysning (doRequests) where
+module Tinglysning (getLandRegister) where
 
 import Text.HTML.TagSoup (parseTags, (~==), fromAttrib, isTagOpenName)
 import qualified OpenSSL.Session as SSL
@@ -20,8 +20,8 @@ import LandRegisterTypes (initLandRegister, LandRegister)
 import Control.Monad.Trans
 import Data.Maybe
 
-doRequests :: T.Text -> IO (Maybe LandRegister)
-doRequests vin = withOpenSSL $ do
+getLandRegister :: T.Text -> IO (Maybe LandRegister)
+getLandRegister vin = withOpenSSL $ do
 --doRequests vin = do
   manager <- newManager $ opensslManagerSettings SSL.context
   --manager <- newManager tlsManagerSettings
