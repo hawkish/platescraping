@@ -20,12 +20,14 @@ getVIN a = do
   case a1 of
     Nothing -> return Nothing
     Just a1 -> return $ getVIN' a1
-      
+
+
 -- We're assuming, that we're looking for a valid VIN after "Stelnummer".
 getVIN' a = do
   a1 <- parseVIN a
   a2 <- validateVIN a1
   return a2
+
 
 parseVIN :: T.Text -> Maybe T.Text
 parseVIN = getElementAfter "Stelnummer" . getTagTexts

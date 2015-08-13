@@ -4,7 +4,7 @@ import Trafikstyrelsen (getVIN)
 import Tinglysning (getLandRegister)
 import ErrorType (initError, Error)
 import Data.String (fromString)
-
+import Text.HTML.TagSoup (parseTags, fromTagText, isTagText)
 
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
@@ -23,7 +23,7 @@ instance ToJSON Debtor
 instance ToJSON AdditionalText
 instance ToJSON Error
 
-
+{--
 main :: IO ()
 main = scotty 3000 $ do
 
@@ -56,6 +56,8 @@ main = scotty 3000 $ do
     status status404
     let error = TLE.decodeUtf8 $ encode $ initError (T.pack "404") (T.pack $ fromString $ "Kan ikke finde servicen.")
     json error
+--}
+
 
 
 searchUsingReg :: String -> IO (Maybe TL.Text)
