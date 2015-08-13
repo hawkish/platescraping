@@ -53,6 +53,55 @@ data LandRegister = MkLandRegister { _motorregister :: Motorregister
 
 makeLenses ''LandRegister
 
+data Surveyor = MkSurveyor { _surveyorName
+                           , _cvr
+                           , _place
+                           } deriving (Eq, Show, Read, Generic)
+
+makeLenses ''Surveyor
+
+data Vehicle = MkVehicle { _brand :: Maybe T.Text
+                         ,  _model :: Maybe T.Text
+                         ,  _vehiclekind :: Maybe T.Text
+                         ,  _registrationNumber :: Maybe T.Text
+                         ,  _vin :: Maybe T.Text
+                         ,  _vehicleID :: Maybe T.Text
+                         } deriving (Eq, Show, Read, Generic)
+
+makeLenses ''Vehicle
+
+data SurveyorDetails = MkSurveyorDetails { _surveyorKind :: Maybe T.Text
+                                         , _surveyorType :: Maybe T.Text
+                                         , _surveyorDate :: Maybe T.Text
+                                         , _endTime :: Maybe T.Text
+                                         , _odometer :: Maybe T.Text
+                                         , _surveyorResult :: Maybe T.Text
+                                         , _surveyorDeadline :: Maybe T.Text
+                                         } deriving (Eq, Show, Read, Generic)
+
+makeLenses ''SurveyorDetails
+
+data ErrorOverview = MkErrorOverview { _errorText :: Maybe T.Text } deriving (Eq, Show, Read, Generic)
+
+makeLenses ''ErrorOverview
+
+data ServiceRemarks = MkServiceRemarks {_serviceRemarks :: Maybe T.Text } deriving (Eq, Show, Read, Generic)
+
+makeLenses ''ServiceRemarks
+
+data SurveyorRapport = MkSurveyorRapport { _surveyor :: Surveyor
+                                         , _vehicle :: Vehicle
+                                         , _surveyorDetails :: SurveyorDetails
+                                         , _errorOverview :: ErrorOverview
+                                         , _systemRemarks :: ServiceRemarks
+                                         } deriving (Eq, Show, Read, Generic)
+
+makeLenses ''SurveyorRapport
+
+data SurveyorRapports = MkSurveyorRapports { _surveyorRapports :: [SurveyorRapport] } deriving (Eq, Show, Read, Generic)
+
+makeLenses ''SurveyorRapports
+
 getTextAfter :: T.Text -> T.Text -> Maybe T.Text
 getTextAfter a b = getElementAfter a $ getTagTexts b
 
