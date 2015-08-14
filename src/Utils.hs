@@ -8,26 +8,11 @@ import Data.Maybe
 import qualified Data.Text as T
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, fromAttrib, Tag)
 
-t = "<input type=\"submit\" name=\"ctl00$m$g_4156985a_4cd3_409b_aab5_4416025b40bb$ctl00$btnDefaultSend\" value=\"\" onclick=\"javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions(&quot;ctl00$m$g_4156985a_4cd3_409b_aab5_4416025b40bb$ctl00$btnDefaultSend&quot;, &quot;&quot;, true, &quot;&quot;, &quot;&quot;, false, false))\" id=\"ctl00_m_g_4156985a_4cd3_409b_aab5_4416025b40bb_ctl00_btnDefaultSend\" style=\"display: none\" />\r\n <table id=\"tblInspections\" class=\"reports responsive\">\r\n                        <thead>\r\n                            <tr>\r\n                                <th>Dato</th>\r\n                                <th>Resultat</th>\r\n                                <th>Km-stand</th>\r\n                                <th>Reg.nr.</th>\r\n                                <th class=\"hideOnSmall\">Gem/send</th>\r\n                            </tr>\r\n                        </thead>\r\n                        <tbody>\r\n                \r\n                    <tr class=\"odd\" onclick=\"location.href=&quot;/Sider/synsrapport.aspx?Inspection=8974365&amp;Vin=11M007467&quot;\">\r\n\t\t\t\t\t\t<td>12-05-2010</td>\r\n\t\t\t\t\t\t<td><span class=\"noLink infoIcon\" title='Godkendt'>GOD</span></td>\r\n\t\t\t\t\t\t<td>65.000</td>\r\n\t\t\t\t\t\t<td>EZ12647</td>\r\n\t\t\t\t\t\t<td class=\"hideOnSmall\">\r\n                            <a id=\"ctl00_m_g_4156985a_4cd3_409b_aab5_4416025b40bb_ctl00_rptInspections_ctl01_lnkSave\" class=\"saveIcon\" href=\"/_layouts/Web.Inspections/SaveReport.aspx?Inspection=8974365&amp;Vin=11M007467\"></a>\r\n                            <a id=\"ctl00_m_g_4156985a_4cd3_409b_aab5_4416025b40bb_ctl00_rptInspections_ctl01_lnkSend\" class=\"sendIcon send popup\" href=\"../_CONTROLTEMPLATES/Web.Inspections.WebParts/SearchResultWebPart/#8974365\"></a>\r\n                        </td>\r\n\t\t\t\t\t</tr>\r\n\t\t\t\t\t\r\n                \r\n                    <tr class=\"even\" onclick=\"location.href=&quot;/Sider/synsrapport.aspx?Inspection=509709&amp;Vin=11M007467&quot;\">\r\n\t\t\t\t\t\t<td>10-10-2005</td>\r\n\t\t\t\t\t\t<td><span class=\"noLink infoIcon\" title='Godkendt'>GOD</span></td>\r\n\t\t\t\t\t\t<td></td>\r\n\t\t\t\t\t\t<td></td>\r\n\t\t\t\t\t\t<td class=\"hideOnSmall\">\r\n                            <a id=\"ctl00_m_g_4156985a_4cd3_409b_aab5_4416025b40bb_ctl00_rptInspections_ctl02_lnkSave\" class=\"saveIcon\" href=\"/_layouts/Web.Inspections/SaveReport.aspx?Inspection=509709&amp;Vin=11M007467\"></a>\r\n                            <a id=\"ctl00_m_g_4156985a_4cd3_409b_aab5_4416025b40bb_ctl00_rptInspections_ctl02_lnkSend\" class=\"sendIcon send popup\" href=\"../_CONTROLTEMPLATES/Web.Inspections.WebParts/SearchResultWebPart/#509709\"></a>\r\n                        </td>\r\n\t\t\t\t\t</tr>\r\n\t\t\t\t\t\r\n                \r\n                        </tbody>\r\n                    </table>"
+t = ""
 
 h = T.pack t
 
 h1 = T.pack "This is a no result string."
-
-getLinks :: T.Text -> [T.Text]
-getLinks = filterLink . splitAtQuote . getLocationHref . getOnClick . getOpenTags
-
-filterLink :: [T.Text] -> [T.Text]
-filterLink a = filter (T.isInfixOf "/Sider") a 
-
-splitAtQuote :: [T.Text] -> [T.Text]
-splitAtQuote = concat . map (T.split (== '\"'))
-
-getLocationHref :: [T.Text] -> [T.Text]
-getLocationHref a = filter (T.isInfixOf "location.href") a 
-
-getOnClick :: [Tag T.Text] -> [T.Text]
-getOnClick = dequote . map (fromAttrib "onclick")
 
 getOpenTags :: T.Text -> [Tag T.Text]
 getOpenTags a = filter isTagOpen (parseTags a)

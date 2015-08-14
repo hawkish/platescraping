@@ -11,18 +11,23 @@ import Control.Monad.Trans
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
-import Utils (getElementAfter, getTagTexts)
+import Utils (getElementAfter, getTagTexts, getOpenTags, dequote)
+import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, fromAttrib, Tag)
 
 
-getVIN :: T.Text -> IO (Maybe T.Text)
+--getVIN :: T.Text -> IO (Maybe T.Text)
 getVIN a = do
   a1 <- liftIO $ getHTMLTrafikStyrelsen a
   case a1 of
     Nothing -> return Nothing
-    Just a1 -> return $ getVIN' a1
+    Just a1 -> return $ Just $ getLinks a1
 
-getLinks :: T.Text -> [T.Text]
-getLinks = filterLink . splitAtQuote . getLocationHref . getOnClick . getOpenTags
+getLinks a = do
+  a1 <- getLinks' a
+  return a1
+
+getLinks' :: T.Text -> [T.Text]
+getLinks' = filterLink . splitAtQuote . getLocationHref . getOnClick . getOpenTags
 
 filterLink :: [T.Text] -> [T.Text]
 filterLink a = filter (T.isInfixOf "/Sider") a 
