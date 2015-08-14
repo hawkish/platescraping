@@ -50,48 +50,8 @@ makeLenses ''AdditionalText
 
 initLandRegister vin a = MkLandRegister { _motorregister = initMotorregister vin a, _document = initDocument a, _creditor = initCreditor a, _debtor = initDebtor a, _additionalText = initAdditionalText a }
 
-initCreditor a = MkCreditor { _cname = getCreditorName a, _cvr = getCreditorName a }
-
-initDebtor a = MkDebtor { _dname = getDebtorName a, _cpr = getDebtorCPR a }
-
-initDocument a = MkDocument { _date = getDocumentDate a, _mortgage = getDocumentMortgage a, _documentType = getDocumentDocumentType a, _principal = getDocumentPrincipal a, _rateOfInterest = getDocumentRateOfInterest a }
-
-initMotorregister vin a = MkMotorregister { _brand = getMotorregisterBrand a, _year = getMotorregisterYear a, _license = getMotorregisterLicense a, _vin = vin }
-
-initAdditionalText a = MkAdditionalText { _text = getAdditionalText a }
-
-getMotorregisterBrand :: T.Text -> Maybe T.Text
-getMotorregisterBrand a = getTextAfter (T.pack "Mærke:") a
-
-getMotorregisterYear :: T.Text -> Maybe T.Text
-getMotorregisterYear a = getTextAfter (T.pack "Årgang:") a
-
-getMotorregisterLicense :: T.Text -> Maybe T.Text
-getMotorregisterLicense a = getTextAfter (T.pack "Registreringsnummer:") a
-
-getDocumentDate :: T.Text -> Maybe T.Text
-getDocumentDate a = getTextAfter (T.pack "Dato/løbenummer:") a
-
-getDocumentDocumentType :: T.Text -> Maybe T.Text
-getDocumentDocumentType a = getTextAfter (T.pack "Dokument type:") a
-
-getDocumentMortgage :: T.Text -> Maybe T.Text
-getDocumentMortgage a = getTextAfter (T.pack "Prioritet:") a
-
-getDocumentPrincipal :: T.Text -> Maybe T.Text
-getDocumentPrincipal a = getTextAfter (T.pack "Hovedstol:") a
-
-getDocumentRateOfInterest :: T.Text -> Maybe T.Text
-getDocumentRateOfInterest a = getTextAfter (T.pack "Rentesats:") a
-
-getDebtorName :: T.Text -> Maybe T.Text
-getDebtorName a = do
-  let names = getTextsAfter (T.pack "Navn:") a
-  name <- getElementAt names 1
-  return $ fromJust name
-
-getDebtorCPR :: T.Text -> Maybe T.Text
-getDebtorCPR a = getTextAfter (T.pack "CPR:") a
+initCreditor a = MkCreditor { _cname = getCreditorName a
+                            , _cvr = getTextAfter (T.pack "CVR:") a }
 
 getCreditorName :: T.Text -> Maybe T.Text
 getCreditorName a = do
@@ -99,8 +59,27 @@ getCreditorName a = do
   name <- getElementAt names 0
   return $ fromJust name
 
-getCreditorCVR :: T.Text -> Maybe T.Text
-getCreditorCVR a = getTextAfter (T.pack "CVR:") a
+initDebtor a = MkDebtor { _dname = getDebtorName a
+                        , _cpr = getTextAfter (T.pack "CPR:") a }
+
+getDebtorName :: T.Text -> Maybe T.Text
+getDebtorName a = do
+  let names = getTextsAfter (T.pack "Navn:") a
+  name <- getElementAt names 1
+  return $ fromJust name
+
+initDocument a = MkDocument { _date = getTextAfter (T.pack "Dato/løbenummer:") a
+                            , _mortgage = getTextAfter (T.pack "Prioritet:") a
+                            , _documentType = getTextAfter (T.pack "Dokument type:") a
+                            , _principal = getTextAfter (T.pack "Hovedstol:") a
+                            , _rateOfInterest = getTextAfter (T.pack "Rentesats:") a }
+
+initMotorregister vin a = MkMotorregister { _brand = getTextAfter (T.pack "Mærke:") a
+                                          , _year = getTextAfter (T.pack "Årgang:") a
+                                          , _license = getTextAfter (T.pack "Registreringsnummer:") a
+                                          , _vin = vin }
+
+initAdditionalText a = MkAdditionalText { _text = getAdditionalText a }
 
 getAdditionalText :: T.Text -> [Maybe T.Text]
 getAdditionalText = getAdditionalText' . getTagTexts 

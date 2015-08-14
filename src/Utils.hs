@@ -1,18 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, getTextAfter, getTagTexts) where
+module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, getTextAfter, getTextsAfter,  getTagTexts) where
 
 import Data.List.Split
 import Data.List
 import Data.Maybe
 import qualified Data.Text as T
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, fromAttrib, Tag)
-
-t = "<h2>Synssted</h2><div class=\"pairName\">Virksomhed</div>\r\n    <div class=\"pairValue\">A-Inspektion - Kolding</div>\r\n\t<div class=\"pairName\">CVR</div>\r\n\t<div class=\"pairValue\">28496818</div>\r\n\t<div class=\"pairName\">Sted</div>\r\n\t<div class=\"pairValue\">Vonsildvej 23<br/>6000 Kolding</div>\r\n\t<div class=\"clear\"></div>"
-
-h = T.pack t
-
-h1 = T.pack "This is a no result string."
 
 getTextAfter :: T.Text -> T.Text -> Maybe T.Text
 getTextAfter a b = getElementAfter a $ getTagTexts b

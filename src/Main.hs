@@ -13,7 +13,7 @@ import Control.Monad.Trans
 import Network.HTTP.Types
 import Web.Scotty
 import Data.Aeson (ToJSON, encode)
-import LandRegisterTypes (LandRegister, Motorregister, Document, Creditor, Debtor, AdditionalText)
+import LandRegisterType (LandRegister, Motorregister, Document, Creditor, Debtor, AdditionalText)
 
 instance ToJSON LandRegister
 instance ToJSON Motorregister
