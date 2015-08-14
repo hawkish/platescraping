@@ -21,6 +21,20 @@ getVIN a = do
     Nothing -> return Nothing
     Just a1 -> return $ getVIN' a1
 
+getLinks :: T.Text -> [T.Text]
+getLinks = filterLink . splitAtQuote . getLocationHref . getOnClick . getOpenTags
+
+filterLink :: [T.Text] -> [T.Text]
+filterLink a = filter (T.isInfixOf "/Sider") a 
+
+splitAtQuote :: [T.Text] -> [T.Text]
+splitAtQuote = concat . map (T.split (== '\"'))
+
+getLocationHref :: [T.Text] -> [T.Text]
+getLocationHref a = filter (T.isInfixOf "location.href") a 
+
+getOnClick :: [Tag T.Text] -> [T.Text]
+getOnClick = dequote . map (fromAttrib "onclick")
 
 -- We're assuming, that we're looking for a valid VIN after "Stelnummer".
 getVIN' a = do
