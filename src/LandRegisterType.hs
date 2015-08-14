@@ -3,11 +3,11 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UnicodeSyntax #-}
 {-# LANGUAGE DeriveGeneric #-}
-module LandRegisterTypes (initCreditor, initDebtor, initMotorregister, initDocument, initAdditionalText, initLandRegister, Creditor, Debtor, Motorregister, Document, AdditionalText, LandRegister) where
+module LandRegisterType (initCreditor, initDebtor, initMotorregister, initDocument, initAdditionalText, initLandRegister, Creditor, Debtor, Motorregister, Document, AdditionalText, LandRegister) where
 
-import Utils (getElementAfter, getElementsAfter, getElementAt, getTagTexts)
+import Utils (getElementAfter, getElementsAfter, getElementAt, getTagTexts, getTextAfter, getTextsAfter)
 import Data.Maybe
-import qualified Data.Text    as T
+import qualified Data.Text as T
 import Control.Lens
 import GHC.Generics
 
@@ -17,8 +17,6 @@ data Motorregister = MkMotorregister { _brand :: Maybe T.Text
                                      , _vin :: Maybe T.Text
                                      } deriving (Eq, Show, Read, Generic)
 
-makeLenses ''Motorregister
-
 data Document = MkDocument { _date :: Maybe T.Text
                            , _mortgage :: Maybe T.Text
                            , _documentType :: Maybe T.Text
@@ -26,23 +24,15 @@ data Document = MkDocument { _date :: Maybe T.Text
                            , _rateOfInterest :: Maybe T.Text
                            } deriving (Eq, Show, Read, Generic)
 
-makeLenses ''Document
-
 data Creditor = MkCreditor { _cname :: Maybe T.Text
                            , _cvr :: Maybe T.Text
                            } deriving (Eq, Show, Read, Generic)
-
-makeLenses ''Creditor
 
 data Debtor = MkDebtor { _dname :: Maybe T.Text
                        , _cpr :: Maybe T.Text
                        } deriving (Eq, Show, Read, Generic)
 
-makeLenses ''Debtor
-
 data AdditionalText = MkAdditionalText { _text :: [Maybe T.Text] } deriving (Eq, Show, Read, Generic)
-
-makeLenses ''AdditionalText
 
 data LandRegister = MkLandRegister { _motorregister :: Motorregister
                                    , _document :: Document
@@ -51,62 +41,13 @@ data LandRegister = MkLandRegister { _motorregister :: Motorregister
                                    , _additionalText :: AdditionalText
                                    } deriving (Eq, Show, Read, Generic)
 
+makeLenses ''Motorregister
+makeLenses ''Document
+makeLenses ''Creditor
+makeLenses ''Debtor
+makeLenses ''AdditionalText
 makeLenses ''LandRegister
 
-data Surveyor = MkSurveyor { _surveyorName
-                           , _cvr
-                           , _place
-                           } deriving (Eq, Show, Read, Generic)
-
-makeLenses ''Surveyor
-
-data Vehicle = MkVehicle { _brand :: Maybe T.Text
-                         ,  _model :: Maybe T.Text
-                         ,  _vehiclekind :: Maybe T.Text
-                         ,  _registrationNumber :: Maybe T.Text
-                         ,  _vin :: Maybe T.Text
-                         ,  _vehicleID :: Maybe T.Text
-                         } deriving (Eq, Show, Read, Generic)
-
-makeLenses ''Vehicle
-
-data SurveyorDetails = MkSurveyorDetails { _surveyorKind :: Maybe T.Text
-                                         , _surveyorType :: Maybe T.Text
-                                         , _surveyorDate :: Maybe T.Text
-                                         , _endTime :: Maybe T.Text
-                                         , _odometer :: Maybe T.Text
-                                         , _surveyorResult :: Maybe T.Text
-                                         , _surveyorDeadline :: Maybe T.Text
-                                         } deriving (Eq, Show, Read, Generic)
-
-makeLenses ''SurveyorDetails
-
-data ErrorOverview = MkErrorOverview { _errorText :: Maybe T.Text } deriving (Eq, Show, Read, Generic)
-
-makeLenses ''ErrorOverview
-
-data ServiceRemarks = MkServiceRemarks {_serviceRemarks :: Maybe T.Text } deriving (Eq, Show, Read, Generic)
-
-makeLenses ''ServiceRemarks
-
-data SurveyorRapport = MkSurveyorRapport { _surveyor :: Surveyor
-                                         , _vehicle :: Vehicle
-                                         , _surveyorDetails :: SurveyorDetails
-                                         , _errorOverview :: ErrorOverview
-                                         , _systemRemarks :: ServiceRemarks
-                                         } deriving (Eq, Show, Read, Generic)
-
-makeLenses ''SurveyorRapport
-
-data SurveyorRapports = MkSurveyorRapports { _surveyorRapports :: [SurveyorRapport] } deriving (Eq, Show, Read, Generic)
-
-makeLenses ''SurveyorRapports
-
-getTextAfter :: T.Text -> T.Text -> Maybe T.Text
-getTextAfter a b = getElementAfter a $ getTagTexts b
-
-getTextsAfter :: T.Text -> T.Text -> [Maybe T.Text]
-getTextsAfter a b = getElementsAfter a $ getTagTexts b
 
 initCreditor a = MkCreditor { _cname = getCreditorName a, _cvr = getCreditorName a }
 

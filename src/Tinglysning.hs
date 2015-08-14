@@ -16,7 +16,7 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
 import Utils (getParameterAt, getElementAt)
-import LandRegisterTypes (initLandRegister, LandRegister)
+import LandRegisterType (initLandRegister, LandRegister)
 import Control.Monad.Trans
 import Data.Maybe
 

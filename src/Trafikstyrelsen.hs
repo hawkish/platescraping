@@ -11,16 +11,25 @@ import Control.Monad.Trans
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
-import Utils (getElementAfter, getTagTexts, getOpenTags, dequote)
+import Utils (getElementAfter, getTagTexts, getOpenTags, dequote, getTextAfter)
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, fromAttrib, Tag)
 
+t = "<h2>Synssted</h2><div class=\"pairName\">Virksomhed</div>\r\n    <div class=\"pairValue\">A-Inspektion - Kolding</div>\r\n\t<div class=\"pairName\">CVR</div>\r\n\t<div class=\"pairValue\">28496818</div>\r\n\t<div class=\"pairName\">Sted</div>\r\n\t<div class=\"pairValue\">Vonsildvej 23<br/>6000 Kolding</div>\r\n\t<div class=\"clear\"></div>"
+
+h = T.pack t
+
+h1 = T.pack "This is a no result string."
 
 --getVIN :: T.Text -> IO (Maybe T.Text)
 getVIN a = do
-  a1 <- liftIO $ getHTMLTrafikStyrelsen a
+  a1 <- liftIO $ getVINHTML a
   case a1 of
     Nothing -> return Nothing
     Just a1 -> return $ Just $ getLinks a1
+
+
+
+
 
 getLinks a = do
   a1 <- getLinks' a
@@ -71,8 +80,8 @@ isDigitOrUpperLetter a
   | isLetter a && isUpper a && a /= 'Q' && a /= 'O' && a /= 'I' = True
   | otherwise = False
 
-getHTMLTrafikStyrelsen :: T.Text -> IO (Maybe T.Text)
-getHTMLTrafikStyrelsen a = do
+getVINHTML :: T.Text -> IO (Maybe T.Text)
+getVINHTML a = do
   manager <- liftIO $ newManager defaultManagerSettings
   let baseUrl = T.pack "http://selvbetjening.trafikstyrelsen.dk/Sider/resultater.aspx?Reg="
   let url = baseUrl `T.append` a
@@ -82,6 +91,19 @@ getHTMLTrafikStyrelsen a = do
      putStrLn $ show ex
      return Nothing
    Right html -> return $ Just html
+
+getSurveyorHTML :: T.Text -> IO (Maybe T.Text)
+getSurveyorHTML a = do
+  manager <- liftIO $ newManager defaultManagerSettings
+  let baseUrl = T.pack "http://selvbetjening.trafikstyrelsen.dk"
+  let url = baseUrl `T.append` a
+  html <- try $ doGetRequest manager url :: IO (Either SomeException T.Text)
+  case html of
+   Left ex -> do
+     putStrLn $ show ex
+     return Nothing
+   Right html -> return $ Just html
+
 
 doGetRequest :: Manager -> T.Text -> IO T.Text
 doGetRequest manager url = do
