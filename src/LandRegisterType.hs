@@ -11,6 +11,13 @@ import qualified Data.Text as T
 import Control.Lens
 import GHC.Generics
 
+data LandRegister = MkLandRegister { _motorregister :: Motorregister
+                                   , _document :: Document
+                                   , _creditor :: Creditor
+                                   , _debtor :: Debtor
+                                   , _additionalText :: AdditionalText
+                                   } deriving (Eq, Show, Read, Generic)
+
 data Motorregister = MkMotorregister { _brand :: Maybe T.Text
                                      , _year :: Maybe T.Text
                                      , _license :: Maybe T.Text
@@ -34,20 +41,14 @@ data Debtor = MkDebtor { _dname :: Maybe T.Text
 
 data AdditionalText = MkAdditionalText { _text :: [Maybe T.Text] } deriving (Eq, Show, Read, Generic)
 
-data LandRegister = MkLandRegister { _motorregister :: Motorregister
-                                   , _document :: Document
-                                   , _creditor :: Creditor
-                                   , _debtor :: Debtor
-                                   , _additionalText :: AdditionalText
-                                   } deriving (Eq, Show, Read, Generic)
-
+makeLenses ''LandRegister
 makeLenses ''Motorregister
 makeLenses ''Document
 makeLenses ''Creditor
 makeLenses ''Debtor
 makeLenses ''AdditionalText
-makeLenses ''LandRegister
 
+initLandRegister vin a = MkLandRegister { _motorregister = initMotorregister vin a, _document = initDocument a, _creditor = initCreditor a, _debtor = initDebtor a, _additionalText = initAdditionalText a }
 
 initCreditor a = MkCreditor { _cname = getCreditorName a, _cvr = getCreditorName a }
 
@@ -58,8 +59,6 @@ initDocument a = MkDocument { _date = getDocumentDate a, _mortgage = getDocument
 initMotorregister vin a = MkMotorregister { _brand = getMotorregisterBrand a, _year = getMotorregisterYear a, _license = getMotorregisterLicense a, _vin = vin }
 
 initAdditionalText a = MkAdditionalText { _text = getAdditionalText a }
-
-initLandRegister vin a = MkLandRegister { _motorregister = initMotorregister vin a, _document = initDocument a, _creditor = initCreditor a, _debtor = initDebtor a, _additionalText = initAdditionalText a }
 
 getMotorregisterBrand :: T.Text -> Maybe T.Text
 getMotorregisterBrand a = getTextAfter (T.pack "Mærke:") a
