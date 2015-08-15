@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, getTextAfter, getTextsAfter,  getTagTexts) where
+module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, getTextAfter, getTextsAfter, getTextAfterAt) where
 
 import Data.List.Split
 import Data.List
@@ -8,11 +8,15 @@ import Data.Maybe
 import qualified Data.Text as T
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, fromAttrib, Tag)
 
+
+getTextAfterAt :: T.Text -> Int -> T.Text -> Maybe T.Text
+getTextAfterAt a c b = getElementAfter a c $ getTagTexts b
+
 getTextAfter :: T.Text -> T.Text -> Maybe T.Text
-getTextAfter a b = getElementAfter a $ getTagTexts b
+getTextAfter a b = getElementAfter a 0 $ dequote $ getTagTexts b
 
 getTextsAfter :: T.Text -> T.Text -> [Maybe T.Text]
-getTextsAfter a b = getElementsAfter a $ getTagTexts b
+getTextsAfter a b = getElementsAfter a $ dequote $ getTagTexts b
 
 getOpenTags :: T.Text -> [Tag T.Text]
 getOpenTags a = filter isTagOpen (parseTags a)
@@ -20,15 +24,15 @@ getOpenTags a = filter isTagOpen (parseTags a)
 dequote :: [T.Text] -> [T.Text]
 dequote = filter (not . T.null) 
 
-getElementAfter :: Eq a => a -> [a] -> Maybe a
-getElementAfter a b = do
+getElementAfter :: Eq a => a -> Int -> [a] -> Maybe a
+getElementAfter a c b = do
   index <- elemIndex a b
-  result <- getElementAfter' index b 
+  result <- getElementAfter' index c b 
   return result
 
-getElementAfter' :: Int -> [b] -> Maybe b
-getElementAfter' index list = do
-  result <- listToMaybe $ drop (index+1) list
+getElementAfter' :: Int -> Int -> [b] -> Maybe b
+getElementAfter' index count list = do
+  result <- listToMaybe $ drop (index+count) list
   return result
 
 getElementsAfter :: (Eq a) => a -> [a] -> [Maybe a]
@@ -69,10 +73,10 @@ getCookie a = do
                                 
 -- Take all relevant tagTexts from the HTML tag soup. Yeah, it's a convoluted process...
 getTagStrings :: String -> [String]
-getTagStrings = map T.unpack . getTagTexts . T.pack
+getTagStrings = map T.unpack . dequote . getTagTexts . T.pack
 
 -- Take all relevant tagTexts from the HTML tag soup. Yeah, it's a convoluted process...
 getTagTexts :: T.Text -> [T.Text]
-getTagTexts = dequote . map f . filter isTagText . parseTags 
+getTagTexts = map f . filter isTagText . parseTags 
   where f = T.unwords . T.words . fromTagText
 

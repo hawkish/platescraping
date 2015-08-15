@@ -10,17 +10,15 @@ import Control.Monad.Trans
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
-import Utils (getElementAfter, getTagTexts, getOpenTags, dequote, getTextAfter)
+import Utils (getElementAfter, getTagTexts, getOpenTags, dequote)
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, fromAttrib, Tag)
 import SurveyorRapportType (initSurveyorRapport, SurveyorRapport)
 
-t = "<h2>Synssted</h2><div class=\"pairName\">Virksomhed</div>\r\n    <div class=\"pairValue\">A-Inspektion - Kolding</div>\r\n\t<div class=\"pairName\">CVR</div>\r\n\t<div class=\"pairValue\">28496818</div>\r\n\t<div class=\"pairName\">Sted</div>\r\n\t<div class=\"pairValue\">Vonsildvej 23<br/>6000 Kolding</div>\r\n\t<div class=\"clear\"></div>"
+t = T.pack "<h2>Fejloversigt<span class=\"floatRightNoClear infoText hideOnSmall\">Hold musen over tallet for beskrivelse</span><span class=\"floatRightNoClear infoText hideOnLarge hideOnMedium\">Tryk p\229 tallet for beskrivelse</span></h2></div>\r\n\t<div class=\"clear\"></div>\r\n    <div class=\"errorList\">\r\n        \r\n        \r\n                <div class=\"number\" title='Bremser'>5</div>\r\n\t            <div class=\"information\">st\230nksk\230rm, t\230ret, venstre, bag</div>\r\n            \r\n                <div class=\"number\" title='El-anl\230g, lygter, reflekser mv.'>6</div>\r\n\t            <div class=\"information\">nummerpladelygte, virker ikke, venstre</div>\r\n            \r\n    </div>\r\n</div>\r\n\r\n<div class=\"clear\"></div>"
 
-a = "/Sider/synsrapport.aspx?Inspection=8974365&Vin=11M007467"
+a = T.pack "/Sider/synsrapport.aspx?Inspection=12319436&Vin=SJNFAAN16U0057657"
 
-h = T.pack t
-
-h1 = T.pack "This is a no result string."
+h = T.pack "This is a no result string."
 
 --getVIN :: T.Text -> IO (Maybe T.Text)
 getVIN a = do
@@ -34,8 +32,8 @@ getSurveyorRapport a = do
   a1 <- liftIO $ getSurveyorHTML a
   case a1 of
    Nothing -> return Nothing
-   --Just a1 -> return $ Just $ initSurveyorRapport a1
-   Just a1 -> return $ Just $ getTagTexts a1
+   Just a1 -> return $ Just $ initSurveyorRapport a1
+   --Just a1 -> return $ Just $ getTagTexts a1
 
 getLinks a = do
   a1 <- getLinks' a
@@ -64,7 +62,7 @@ getVIN' a = do
 
 
 parseVIN :: T.Text -> Maybe T.Text
-parseVIN = getElementAfter "Stelnummer" . getTagTexts
+parseVIN = getElementAfter "Stelnummer" 0 . dequote . getTagTexts
 
 -- The rules in this wikipedia article is used.
 -- https://en.wikipedia.org/wiki/Vehicle_identification_number

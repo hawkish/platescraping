@@ -5,7 +5,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 module LandRegisterType (initCreditor, initDebtor, initMotorregister, initDocument, initAdditionalText, initLandRegister, Creditor, Debtor, Motorregister, Document, AdditionalText, LandRegister) where
 
-import Utils (getElementAfter, getElementsAfter, getElementAt, getTagTexts, getTextAfter, getTextsAfter)
+import Utils (getElementAfter, getElementsAfter, getElementAt, dequote, getTagTexts, getTextAfter, getTextsAfter)
 import Data.Maybe
 import qualified Data.Text as T
 import Control.Lens
@@ -82,7 +82,7 @@ initMotorregister vin a = MkMotorregister { _brand = getTextAfter (T.pack "Mærk
 initAdditionalText a = MkAdditionalText { _text = getAdditionalText a }
 
 getAdditionalText :: T.Text -> [Maybe T.Text]
-getAdditionalText = getAdditionalText' . getTagTexts 
+getAdditionalText = getAdditionalText' . dequote . getTagTexts 
 
 getAdditionalText' :: [T.Text] -> [Maybe T.Text]
 getAdditionalText' [] = []
