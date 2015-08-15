@@ -86,6 +86,8 @@ getErrorListTags :: [Tag T.Text] -> [Tag T.Text]
 getErrorListTags = dropWhile (~/= ("<div class=errorList>" :: String)) 
 
 
+
+
 initServiceRemarks a = MkServiceRemarks {_serviceText = getTextAfterAt (T.pack "Sted") 2 a }
 
 initSurveyorRapport a = MkSurveyorRapport { _surveyor = initSurveyor a
