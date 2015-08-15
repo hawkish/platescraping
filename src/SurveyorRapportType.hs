@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UnicodeSyntax #-}
 {-# LANGUAGE DeriveGeneric #-}
-module SurveyorRapportType () where
+module SurveyorRapportType (initSurveyorRapport, SurveyorRapport) where
 
 import Utils (getElementAfter, getElementsAfter, getElementAt, getTagTexts, getTextAfter, getTextsAfter)
 
@@ -58,20 +58,20 @@ initSurveyor a = MkSurveyor { _surveyorName = getTextAfter (T.pack "Virksomhed")
                             , _cvr = getTextAfter (T.pack "CVR") a
                             , _place = getTextAfter (T.pack "Sted") a }
 
-initSurveyorDetails a = MkSurveyorDetails { _surveyorKind = getTextAfter (T.pack "Sted") a
-                                          , _surveyorType = getTextAfter (T.pack "Sted") a
-                                          , _surveyorDate = getTextAfter (T.pack "Sted") a
-                                          , _endTime = getTextAfter (T.pack "Sted") a
-                                          , _odometer = getTextAfter (T.pack "Sted") a
-                                          , _surveyorResult = getTextAfter (T.pack "Sted") a
-                                          , _surveyorDeadline = getTextAfter (T.pack "Sted") a }
+initSurveyorDetails a = MkSurveyorDetails { _surveyorKind = getTextAfter (T.pack "Synsart") a
+                                          , _surveyorType = getTextAfter (T.pack "Synstype") a
+                                          , _surveyorDate = getTextAfter (T.pack "Synsdato") a
+                                          , _endTime = getTextAfter (T.pack "Sluttid") a
+                                          , _odometer = getTextAfter (T.pack "Km-stand") a
+                                          , _surveyorResult = getTextAfter (T.pack "Synsresultat") a
+                                          , _surveyorDeadline = getTextAfter (T.pack "Sidste frist for omsyn/genfremstilling") a }
 
-initVehicle a = MkVehicle { _brand = getTextAfter (T.pack "Sted") a
-                          , _model = getTextAfter (T.pack "Sted") a
-                          , _vehicleKind = getTextAfter (T.pack "Sted") a
-                          , _registrationNumber = getTextAfter (T.pack "Sted") a
-                          , _vin = getTextAfter (T.pack "Sted") a
-                          , _vehicleID = getTextAfter (T.pack "Sted") a }
+initVehicle a = MkVehicle { _brand = getTextAfter (T.pack "Mærke") a
+                          , _model = getTextAfter (T.pack "Model") a
+                          , _vehicleKind = getTextAfter (T.pack "Køretøjsart") a
+                          , _registrationNumber = getTextAfter (T.pack "Reg.nr.") a
+                          , _vin = getTextAfter (T.pack "Stelnr.") a
+                          , _vehicleID = getTextAfter (T.pack "Køretøjs-ID") a }
 
 initErrorOverview a = MkErrorOverview { _errorText = getTextAfter (T.pack "Sted") a }
 

@@ -3,7 +3,6 @@
 
 module Trafikstyrelsen (getVIN) where
 
-
 import Network.HTTP.Client
 import Control.Exception
 import Data.Char
@@ -13,8 +12,11 @@ import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
 import Utils (getElementAfter, getTagTexts, getOpenTags, dequote, getTextAfter)
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, fromAttrib, Tag)
+import SurveyorRapportType (initSurveyorRapport, SurveyorRapport)
 
 t = "<h2>Synssted</h2><div class=\"pairName\">Virksomhed</div>\r\n    <div class=\"pairValue\">A-Inspektion - Kolding</div>\r\n\t<div class=\"pairName\">CVR</div>\r\n\t<div class=\"pairValue\">28496818</div>\r\n\t<div class=\"pairName\">Sted</div>\r\n\t<div class=\"pairValue\">Vonsildvej 23<br/>6000 Kolding</div>\r\n\t<div class=\"clear\"></div>"
+
+a = "/Sider/synsrapport.aspx?Inspection=8974365&Vin=11M007467"
 
 h = T.pack t
 
@@ -28,8 +30,12 @@ getVIN a = do
     Just a1 -> return $ Just $ getLinks a1
 
 
-
-
+getSurveyorRapport a = do
+  a1 <- liftIO $ getSurveyorHTML a
+  case a1 of
+   Nothing -> return Nothing
+   --Just a1 -> return $ Just $ initSurveyorRapport a1
+   Just a1 -> return $ Just $ getTagTexts a1
 
 getLinks a = do
   a1 <- getLinks' a
