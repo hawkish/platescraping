@@ -88,7 +88,13 @@ getTitleAttribs = map (TS.fromAttrib ("title" :: T.Text))
 getClassErrorList :: [Tag T.Text] -> [Tag T.Text]
 getClassErrorList = takeWhile (~/= ("<div class=clear>" :: String)) . dropWhile (~/= ("<div class=errorList>" :: String))
 
-getInformation = (filter isNumeric) . dequote . map extractText . (filter isTagText) . getClassErrorList . parseTags
+test = test' . getClassErrorList . parseTags
+
+test' :: [Tag T.Text] -> [Tag T.Text]
+test' = takeWhile (~/= ("<div class=number>" :: String)) . dropWhile (~/= ("<div class=information>" :: String))
+
+
+getInformation = (filter (not . isNumeric)) . dequote . map extractText . (filter isTagText) . getClassErrorList . parseTags
                  where extractText = T.unwords . T.words . fromTagText
 
 

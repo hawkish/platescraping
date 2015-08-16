@@ -81,7 +81,7 @@ getTagTexts :: T.Text -> [T.Text]
 getTagTexts = map extractText . filter isTagText . parseTags 
   where extractText = T.unwords . T.words . fromTagText
 
-isInteger s = case rational s of
+isInteger s = case decimal s of
   Left msg -> False
   Right s -> True
  
