@@ -6,7 +6,7 @@
 module SurveyorRapportType (initSurveyorRapport, SurveyorRapport) where
 
 import Utils (getElementAfter, getElementsAfter, getElementAt, dequote, getTagTexts, getTextAfter, getTextAfterAt, getTextsAfter)
-import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, Tag, (~/=))
+import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, Tag, (~/=), (~==), sections)
 import qualified Text.HTML.TagSoup as TS
 import qualified Data.Text as T
 import Control.Lens
@@ -76,16 +76,20 @@ initVehicle a = MkVehicle { _brand = getTextAfterAt (T.pack "Mærke") 2 a
 
 initErrorOverview a = MkErrorOverview { _errorText = getTextAfterAt (T.pack "Sted") 2 a }
 
-t = T.pack "<h2>Fejloversigt<span class=\"floatRightNoClear infoText hideOnSmall\">Hold musen over tallet for beskrivelse</span><span class=\"floatRightNoClear infoText hideOnLarge hideOnMedium\">Tryk p\229 tallet for beskrivelse</span></h2></div>\r\n\t<div class=\"clear\"></div>\r\n    <div class=\"errorList\">\r\n        \r\n        \r\n                <div class=\"number\" title='Bremser'>5</div>\r\n\t            <div class=\"information\">st\230nksk\230rm, t\230ret, venstre, bag</div>\r\n            \r\n                <div class=\"number\" title='El-anl\230g, lygter, reflekser mv.'>6</div>\r\n\t            <div class=\"information\">nummerpladelygte, virker ikke, venstre</div>\r\n            \r\n    </div>\r\n</div>\r\n\r\n<div class=\"clear\"></div>"
+t = T.pack "<div class=\"errorList\">\r\n        \r\n        \r\n                <div class=\"number\" title='Bremser'>5</div>\r\n\t            <div class=\"information\">st\230nksk\230rm, t\230ret, venstre, bag</div>\r\n            \r\n                <div class=\"number\" title='El-anl\230g, lygter, reflekser mv.'>6</div>\r\n\t            <div class=\"information\">nummerpladelygte, virker ikke, venstre</div>\r\n            \r\n    </div>\r\n</div>\r\n\r\n<div class=\"clear\"></div>\r\n<br />\r\n\r\n<div class=\"floatLeft\">\r\n    <h2>Servicebem\230rkninger</h2>\r\n    \r\n    \r\n</div>\r\n\r\n<div class=\"clear\"></div>\r\n<br />\r\n\r\n\t\t\t\t\t</div>\r\n\r\n\r\n\t\t\t\t</div></div></td>\r\n\t\t\t</tr>\r\n\t\t</table></td>\r\n\t</tr>\r\n</table>\r\n\t\t\t\t\t\t\t\t\t\r\n</div>\r\n\t\t\t\t\t\t\t\t<div class=\"rightColumn hideOnMedium hideOnSmall\">\r\n\t\t\t\t\t\t\t\t\t<!-- Main RIGHT content -->\r\n                                    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">\r\n\t<tr>\r\n\t\t<td id=\"MSOZoneCell_WebPartctl00_m_g_ac7f211e_5fda_4338_9980_57f492a2a0be\" valign=\"top\" class=\"s4-wpcell-plain \"><table class=\"s4-wpTopTable \" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\r\n\t\t\t<tr>\r\n\t\t\t\t<td valign=\"top\"><div WebPartID=\"ac7f211e-5fda-4338-9980-57f492a2a0be\" HasPers=\"false\" id=\"WebPartctl00_m_g_ac7f211e_5fda_4338_9980_57f492a2a0be\" width=\"100%\" class=\"ms-WPBody noindex \" allowDelete=\"false\" allowExport=\"false\" style=\"\" ><div id=\"ctl00_m_g_ac7f211e_5fda_4338_9980_57f492a2a0be\">\r\n\t\t\t\t\t\r\n<div class=\"boxHeader\">\r\n\t<h3>Leder du efter...</h3>\r\n</div>"
 
-getTitles = dequote . getTitleAttribs . (filter isTagOpen) . getErrorListTags
+getTitles :: T.Text -> [T.Text]
+getTitles = dequote . getTitleAttribs . (filter isTagOpen) . getClassErrorList . parseTags
 
+getTitleAttribs :: [Tag T.Text] -> [T.Text]
 getTitleAttribs = map (TS.fromAttrib ("title" :: T.Text))
 
-getErrorListTags :: [Tag T.Text] -> [Tag T.Text]
-getErrorListTags = dropWhile (~/= ("<div class=errorList>" :: String)) 
+-- Drop while class=errorList isn't found. Then take while class=clear isn't found.
+getClassErrorList :: [Tag T.Text] -> [Tag T.Text]
+getClassErrorList = takeWhile (~/= ("<div class=clear>" :: String)) . dropWhile (~/= ("<div class=errorList>" :: String))
 
-
+getInformation = dequote . map f . (filter isTagText) . getClassErrorList . parseTags
+                 where f = T.unwords . T.words . fromTagText
 
 
 initServiceRemarks a = MkServiceRemarks {_serviceText = getTextAfterAt (T.pack "Sted") 2 a }
