@@ -5,7 +5,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 module SurveyorRapportType (initSurveyorRapport, SurveyorRapport) where
 
-import Utils (getElementAfter, getElementsAfter, getElementAt, dequote, getTagTexts, getTextAfter, getTextAfterAt, getTextsAfter)
+import Utils (getElementAfter, getElementsAfter, getElementAt, dequote, getTagTexts, getTextAfter, getTextAfterAt, getTextsAfter, isNumeric)
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, Tag, (~/=), (~==), sections)
 import qualified Text.HTML.TagSoup as TS
 import qualified Data.Text as T
@@ -88,8 +88,8 @@ getTitleAttribs = map (TS.fromAttrib ("title" :: T.Text))
 getClassErrorList :: [Tag T.Text] -> [Tag T.Text]
 getClassErrorList = takeWhile (~/= ("<div class=clear>" :: String)) . dropWhile (~/= ("<div class=errorList>" :: String))
 
-getInformation = dequote . map f . (filter isTagText) . getClassErrorList . parseTags
-                 where f = T.unwords . T.words . fromTagText
+getInformation = (filter isNumeric) . dequote . map extractText . (filter isTagText) . getClassErrorList . parseTags
+                 where extractText = T.unwords . T.words . fromTagText
 
 
 initServiceRemarks a = MkServiceRemarks {_serviceText = getTextAfterAt (T.pack "Sted") 2 a }

@@ -1,10 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, getTextAfter, getTextsAfter, getTextAfterAt) where
+module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, getTextAfter, getTextsAfter, getTextAfterAt, isNumeric) where
 
 import Data.List.Split
 import Data.List
 import Data.Maybe
+import Data.Text.Read
 import qualified Data.Text as T
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, fromAttrib, Tag)
 
@@ -77,6 +78,12 @@ getTagStrings = map T.unpack . dequote . getTagTexts . T.pack
 
 -- Take all relevant tagTexts from the HTML tag soup. Yeah, it's a convoluted process...
 getTagTexts :: T.Text -> [T.Text]
-getTagTexts = map f . filter isTagText . parseTags 
-  where f = T.unwords . T.words . fromTagText
+getTagTexts = map extractText . filter isTagText . parseTags 
+  where extractText = T.unwords . T.words . fromTagText
 
+isInteger s = case rational s of
+  Left msg -> False
+  Right s -> True
+ 
+isNumeric :: T.Text -> Bool
+isNumeric s = isInteger s 
