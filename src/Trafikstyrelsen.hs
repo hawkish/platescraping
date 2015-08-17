@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Trafikstyrelsen (getVIN) where
+module Trafikstyrelsen where
 
 import Network.HTTP.Client
 import Control.Exception
@@ -26,23 +26,29 @@ e = T.pack "/Sider/synsrapport.aspx?Inspection=15618660&Vin=SB153ABK00E152978"
 
 
 
-h = T.pack "This is a no result string."
+h = T.pack "YB24553"
 
---getVIN :: T.Text -> IO (Maybe T.Text)
+--getVIN :: T.Text -> IO ([T.Text])
 getVIN a = do
-  a1 <- liftIO $ getVINHTML a
+  a1 <- getVINHTML a
   case a1 of
-    Nothing -> return Nothing
-    Just a1 -> return $ Just $ getLinks a1
+    Nothing -> return []
+    Just a1 -> do
+      let links = getLinks a1
+      foldl getSurveyorRapport [] links
+      
 
+--getSurveyorRapports a = foldl getSurveyorRapport [] (getVIN a)
 
+getSurveyorRapport :: T.Text -> IO (Maybe SurveyorRapport)
 getSurveyorRapport a = do
   a1 <- liftIO $ getSurveyorHTML a
   case a1 of
    Nothing -> return Nothing
-   Just a1 -> return $ Just $ initSurveyorRapport a1
+   Just a1 -> return $ Just (initSurveyorRapport a1)
    --Just a1 -> return $ Just $ getTagTexts a1
 
+getLinks :: T.Text -> [T.Text]
 getLinks a = do
   a1 <- getLinks' a
   return a1
