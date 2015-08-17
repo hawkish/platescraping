@@ -6,6 +6,7 @@ module Trafikstyrelsen where
 import Network.HTTP.Client
 import Control.Exception
 import Data.Char
+-- import Control.Monad
 import Control.Monad.Trans
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
@@ -32,29 +33,30 @@ h = T.pack "YB24553"
 getVIN a = do
   a1 <- getVINHTML a
   case a1 of
-    Nothing -> return []
+    Nothing -> return Nothing
     Just a1 -> do
       let links = getLinks a1
-      foldl getSurveyorRapport [] links
+      --getSurveyorRapports links
+      return Nothing
       
 
---getSurveyorRapports a = foldl getSurveyorRapport [] (getVIN a)
+test []     = []
+test (x:xs) =  test' x : test xs
+               where test' a = a `T.append` (T.pack "a")
+
+getSurveyorRapports [] = []
+getSurveyorRapports (x:xs) = fmap getSurveyorRapport x : getSurveyorRapports xs
 
 getSurveyorRapport :: T.Text -> IO (Maybe SurveyorRapport)
 getSurveyorRapport a = do
-  a1 <- liftIO $ getSurveyorHTML a
+  a1 <- getSurveyorHTML a
   case a1 of
    Nothing -> return Nothing
    Just a1 -> return $ Just (initSurveyorRapport a1)
    --Just a1 -> return $ Just $ getTagTexts a1
 
 getLinks :: T.Text -> [T.Text]
-getLinks a = do
-  a1 <- getLinks' a
-  return a1
-
-getLinks' :: T.Text -> [T.Text]
-getLinks' = filterLink . splitAtQuote . getLocationHref . getOnClick . getOpenTags
+getLinks = filterLink . splitAtQuote . getLocationHref . getOnClick . getOpenTags
 
 filterLink :: [T.Text] -> [T.Text]
 filterLink a = filter (T.isInfixOf "/Sider") a 
