@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, getTextAfter, getTextsAfter, getTextAfterAt, isNumeric) where
+module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, getTextAfter, getTextsAfter, getTextAfterAt, del_every_nth) where
 
 import Data.List.Split
-import Data.List
+import Data.List (elemIndex, elemIndices) 
 import Data.Maybe
-import Data.Text.Read
+
 import qualified Data.Text as T
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, fromAttrib, Tag)
 
@@ -81,9 +81,11 @@ getTagTexts :: T.Text -> [T.Text]
 getTagTexts = map extractText . filter isTagText . parseTags 
   where extractText = T.unwords . T.words . fromTagText
 
-isInteger s = case decimal s of
-  Left msg -> False
-  Right s -> True
- 
-isNumeric :: T.Text -> Bool
-isNumeric s = isInteger s 
+del_every_nth :: Int -> [a] -> [a]    
+del_every_nth n = concat . map init . group n
+
+group :: Int -> [a] -> [[a]]
+group n [] = []
+group n xs = take n xs : group n (drop n xs)
+
+
