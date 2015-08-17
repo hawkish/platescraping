@@ -18,6 +18,14 @@ t = T.pack "<h2>Fejloversigt<span class=\"floatRightNoClear infoText hideOnSmall
 
 a = T.pack "/Sider/synsrapport.aspx?Inspection=12319436&Vin=SJNFAAN16U0057657"
 
+b = T.pack "/Sider/synsrapport.aspx?Inspection=15659516&Vin=VF33CNFUB82505218"
+
+c = T.pack "/Sider/synsrapport.aspx?Inspection=15790626&Vin=VF33CNFUB82505218"
+
+e = T.pack "/Sider/synsrapport.aspx?Inspection=15618660&Vin=SB153ABK00E152978"
+
+
+
 h = T.pack "This is a no result string."
 
 --getVIN :: T.Text -> IO (Maybe T.Text)

@@ -37,7 +37,7 @@ data SurveyorDetails = MkSurveyorDetails { _surveyorKind :: Maybe T.Text
 
 data ErrorOverview = MkErrorOverview { _errorTexts :: [[T.Text]] } deriving (Eq, Show, Read, Generic)
 
-data ServiceRemarks = MkServiceRemarks {_serviceText :: Maybe T.Text } deriving (Eq, Show, Read, Generic)
+data ServiceRemarks = MkServiceRemarks {_remarks :: [T.Text] } deriving (Eq, Show, Read, Generic)
 
 data SurveyorRapport = MkSurveyorRapport { _surveyor :: Surveyor
                                          , _vehicle :: Vehicle
@@ -95,7 +95,13 @@ getTitleAttribs = map (TS.fromAttrib ("title" :: T.Text))
 getClassErrorList :: [Tag T.Text] -> [Tag T.Text]
 getClassErrorList = takeWhile (~/= ("<div class=clear>" :: String)) . dropWhile (~/= ("<div class=errorList>" :: String))
 
-initServiceRemarks a = MkServiceRemarks {_serviceText = getTextAfterAt (T.pack "Sted") 2 a }
+initServiceRemarks a = MkServiceRemarks {_remarks = getServiceRemarks a }
+
+getServiceRemarks :: T.Text -> [T.Text]
+getServiceRemarks = dequote . map extractText . (filter isTagText) . getClassServiceRemark . parseTags
+                   where extractText = T.unwords . T.words . fromTagText
+
+getClassServiceRemark = takeWhile (~/= ("<div class=clear>" :: String)) . dropWhile (~/= ("<div class=serviceRemarkBullet>" :: String))
 
 initSurveyorRapport a = MkSurveyorRapport { _surveyor = initSurveyor a
                                         , _vehicle = initVehicle a
