@@ -26,10 +26,11 @@ c = T.pack "/Sider/synsrapport.aspx?Inspection=15790626&Vin=VF33CNFUB82505218"
 
 e = T.pack "/Sider/synsrapport.aspx?Inspection=15618660&Vin=SB153ABK00E152978"
 
-
-
 h = T.pack "YB24553"
 
+getSurveyorRapports a = do
+  links <- getSurveyorLinks a
+  return $ fmap getSurveyorRapports' links
 
 getSurveyorLinks :: T.Text -> IO (Maybe [T.Text])
 getSurveyorLinks a = do
@@ -40,13 +41,16 @@ getSurveyorLinks a = do
   return $ fmap parseLinks a1
 
 
-test []     = []
-test (x:xs) =  test' x : test xs
-               where test' a = a `T.append` (T.pack "a")
+test a = do
+  html <- getVINHTML a
+  let links = fmap parseLinks html
+  let a1 = fmap getSurveyorRapports' links
+  return a1
 
---getSurveyorRapports :: [T.Text] -> IO (Maybe SurveyorRapport)
-getSurveyorRapports [] = []
-getSurveyorRapports (x:xs) = fmap (map getSurveyorRapport) : getSurveyorRapports xs
+
+getSurveyorRapports' :: [T.Text] -> [IO (Maybe SurveyorRapport)]
+getSurveyorRapports' [] = []
+getSurveyorRapports' (x:xs) = getSurveyorRapport x : getSurveyorRapports' xs
 
 getSurveyorRapport :: T.Text -> IO (Maybe SurveyorRapport)
 getSurveyorRapport a = do
