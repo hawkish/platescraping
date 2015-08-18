@@ -30,7 +30,8 @@ e = T.pack "/Sider/synsrapport.aspx?Inspection=15618660&Vin=SB153ABK00E152978"
 
 h = T.pack "YB24553"
 
---getVIN :: T.Text -> IO ([T.Text])
+
+getSurveyorLinks :: T.Text -> IO (Maybe [T.Text])
 getSurveyorLinks a = do
   -- Unwrap the IO result for a1.
   a1 <- getVINHTML a
