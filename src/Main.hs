@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Trafikstyrelsen (getVIN)
+import Trafikstyrelsen (getSurveyorRapports)
 import Tinglysning (getLandRegister)
 import ErrorType (initError, Error)
 import Data.String (fromString)
@@ -23,7 +23,7 @@ instance ToJSON Debtor
 instance ToJSON AdditionalText
 instance ToJSON Error
 
-{--
+
 main :: IO ()
 main = scotty 3000 $ do
 
@@ -56,20 +56,13 @@ main = scotty 3000 $ do
     status status404
     let error = TLE.decodeUtf8 $ encode $ initError (T.pack "404") (T.pack $ fromString $ "Kan ikke finde servicen.")
     json error
---}
 
-
-
-searchUsingReg :: String -> IO (Maybe TL.Text)
-searchUsingReg rn = do
-  vin <- liftIO $ getVIN (T.pack rn)
-  case vin of
+searchUsingVin :: String -> IO (Maybe TL.Text)
+searchUsingVin vin = do
+  landRegister <- getLandRegister (T.pack vin)
+  case landRegister of
     Nothing -> return Nothing
-    Just vin -> do
-      landRegister <- getLandRegister vin
-      case landRegister of
-        Nothing -> return Nothing
-        Just landRegister -> return $ Just $ TLE.decodeUtf8 $ encode landRegister
+    Just landRegister -> return $ Just $ TLE.decodeUtf8 $ encode landRegister
 
 searchUsingVin :: String -> IO (Maybe TL.Text)
 searchUsingVin vin = do

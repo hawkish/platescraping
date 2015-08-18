@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Trafikstyrelsen where
+module Trafikstyrelsen (getSurveyorRapports) where
 
 import Network.HTTP.Client
 import Control.Exception
@@ -33,6 +33,7 @@ x = [c,e]
 
 getSurveyorRapports :: T.Text -> IO [Maybe SurveyorRapport]
 getSurveyorRapports a = do
+  -- Getting link(s) to the surveyor rapport(s).
   a1 <- getSurveyorLinks a
   case a1 of
     Nothing -> return []
