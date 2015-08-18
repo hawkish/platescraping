@@ -4,7 +4,7 @@ import Trafikstyrelsen (getSurveyorRapports)
 import Tinglysning (getLandRegister)
 import ErrorType (initError, Error)
 import Data.String (fromString)
-import Text.HTML.TagSoup (parseTags, fromTagText, isTagText)
+
 
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
