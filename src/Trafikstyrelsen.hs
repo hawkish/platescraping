@@ -6,9 +6,9 @@ module Trafikstyrelsen where
 import Network.HTTP.Client
 import Control.Exception
 import Data.Char
-import Control.Monad
+-- import Control.Monad
 import Control.Monad.Trans
-import Control.Monad.Trans.Maybe
+-- import Control.Monad.Trans.Maybe
 --import Control.Applicative
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
@@ -29,33 +29,27 @@ e = T.pack "/Sider/synsrapport.aspx?Inspection=15618660&Vin=SB153ABK00E152978"
 
 h = T.pack "YB24553"
 
+x = [c,e]
+
+getSurveyorRapports :: T.Text -> IO [Maybe SurveyorRapport]
 getSurveyorRapports a = do
-  links <- getSurveyorLinks a
-  return $ fmap getSurveyorRapports' links
+  a1 <- getSurveyorLinks a
+  case a1 of
+    Nothing -> return []
+    Just a2 -> do
+      -- Using mapM :: (a -> mb) -> [a] -> m[b]
+      -- In this case: (a -> IO(b)) -> [a] -> IO[b]
+      a3 <- mapM getSurveyorRapport a2
+      -- Using return to wrap into IO
+      return a3
 
 getSurveyorLinks :: T.Text -> IO (Maybe [T.Text])
 getSurveyorLinks a = do
   -- Unwrap the IO result for a1.
   a1 <- getVINHTML a
-  -- Use fmap to unwrap Maybe for getLinks
-  -- Use return to wrap back in IO
+  -- Using fmap to unwrap Maybe for parseLinks
+  -- Using return to wrap into IO
   return $ fmap parseLinks a1
-
-test a = do
-  links <- runMaybeT getSurveyorLinks a
-  return links
-
-{--
-test a = do
-  html <- getVINHTML a
-  let links = fmap parseLinks html
-  let a1 = fmap getSurveyorRapports' links
-  return a1
---}
-
-getSurveyorRapports' :: [T.Text] -> [IO (Maybe SurveyorRapport)]
-getSurveyorRapports' [] = []
-getSurveyorRapports' (x:xs) = getSurveyorRapport x : getSurveyorRapports' xs
 
 getSurveyorRapport :: T.Text -> IO (Maybe SurveyorRapport)
 getSurveyorRapport a = do
