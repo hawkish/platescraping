@@ -6,8 +6,9 @@ module Trafikstyrelsen where
 import Network.HTTP.Client
 import Control.Exception
 import Data.Char
--- import Control.Monad
+import Control.Monad
 import Control.Monad.Trans
+import Control.Monad.Trans.Maybe
 --import Control.Applicative
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
@@ -40,13 +41,17 @@ getSurveyorLinks a = do
   -- Use return to wrap back in IO
   return $ fmap parseLinks a1
 
+test a = do
+  links <- runMaybeT getSurveyorLinks a
+  return links
 
+{--
 test a = do
   html <- getVINHTML a
   let links = fmap parseLinks html
   let a1 = fmap getSurveyorRapports' links
   return a1
-
+--}
 
 getSurveyorRapports' :: [T.Text] -> [IO (Maybe SurveyorRapport)]
 getSurveyorRapports' [] = []

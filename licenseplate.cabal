@@ -25,4 +25,5 @@ executable licenseplate
                  , connection==0.2.5
                  , scotty==0.10.1
                  , aeson==0.9.0.1
+                 , transformers==0.4.2
   ghc-options: -O2 -W -threaded -rtsopts
