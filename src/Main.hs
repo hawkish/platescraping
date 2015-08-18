@@ -57,12 +57,12 @@ main = scotty 3000 $ do
     let error = TLE.decodeUtf8 $ encode $ initError (T.pack "404") (T.pack $ fromString $ "Kan ikke finde servicen.")
     json error
 
-searchUsingVin :: String -> IO (Maybe TL.Text)
-searchUsingVin vin = do
-  landRegister <- getLandRegister (T.pack vin)
-  case landRegister of
+searchUsingReg :: String -> IO (Maybe TL.Text)
+searchUsingReg reg = do
+  surveyorRapports <- getSurveyorRapports (T.pack reg)
+  case surveyorRapports of
     Nothing -> return Nothing
-    Just landRegister -> return $ Just $ TLE.decodeUtf8 $ encode landRegister
+    Just surveyorRapports -> return $ Just $ TLE.decodeUtf8 $ encode surveyorRapports
 
 searchUsingVin :: String -> IO (Maybe TL.Text)
 searchUsingVin vin = do
