@@ -14,6 +14,7 @@ import Network.HTTP.Types
 import Web.Scotty
 import Data.Aeson (ToJSON, encode)
 import LandRegisterType (LandRegister, Motorregister, Document, Creditor, Debtor, AdditionalText)
+import SurveyorRapportType (SurveyorRapport, Surveyor, Vehicle, SurveyorDetails, ErrorOverview, ServiceRemarks)
 
 instance ToJSON LandRegister
 instance ToJSON Motorregister
@@ -21,6 +22,14 @@ instance ToJSON Document
 instance ToJSON Creditor
 instance ToJSON Debtor
 instance ToJSON AdditionalText
+
+instance ToJSON SurveyorRapport
+instance ToJSON Surveyor
+instance ToJSON Vehicle
+instance ToJSON SurveyorDetails
+instance ToJSON ErrorOverview
+instance ToJSON ServiceRemarks
+
 instance ToJSON Error
 
 
@@ -57,10 +66,12 @@ main = scotty 3000 $ do
     let error = TLE.decodeUtf8 $ encode $ initError (T.pack "404") (T.pack $ fromString $ "Kan ikke finde servicen.")
     json error
 
-searchUsingReg :: String -> IO (TL.Text)
+searchUsingReg :: String -> IO (Maybe TL.Text)
 searchUsingReg reg = do
   surveyorRapports <- getSurveyorRapports (T.pack reg)
-  return $ TLE.decodeUtf8 $ encode surveyorRapports
+  if surveyorRapports == []
+    then return Nothing
+    else return $ Just $ TLE.decodeUtf8 $ encode surveyorRapports
   
 searchUsingVin :: String -> IO (Maybe TL.Text)
 searchUsingVin vin = do

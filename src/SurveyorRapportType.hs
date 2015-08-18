@@ -3,7 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UnicodeSyntax #-}
 {-# LANGUAGE DeriveGeneric #-}
-module SurveyorRapportType (initSurveyorRapport, SurveyorRapport) where
+module SurveyorRapportType (initSurveyorRapport, SurveyorRapport, Surveyor, Vehicle, SurveyorDetails, ErrorOverview, ServiceRemarks) where
 
 import Utils (getElementAfter, getElementsAfter, getElementAt, dequote, getTagTexts, getTextAfter, getTextAfterAt, getTextsAfter, del_every_nth)
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, Tag, Tag(TagOpen), (~/=), (~==))
@@ -46,7 +46,6 @@ data SurveyorRapport = MkSurveyorRapport { _surveyor :: Surveyor
                                          , _serviceRemarks :: ServiceRemarks
                                          } deriving (Eq, Show, Read, Generic)
 
-data SurveyorRapports = MkSurveyorRapports { _surveyorRapports :: [SurveyorRapport] } deriving (Eq, Show, Read, Generic)
 
 makeLenses ''Surveyor
 makeLenses ''Vehicle
@@ -54,7 +53,6 @@ makeLenses ''SurveyorDetails
 makeLenses ''ErrorOverview
 makeLenses ''ServiceRemarks
 makeLenses ''SurveyorRapport
-makeLenses ''SurveyorRapports
 
 initSurveyor a = MkSurveyor { _surveyorName = getTextAfterAt (T.pack "Virksomhed") 2 a
                             , _cvr = getTextAfterAt (T.pack "CVR") 2 a
