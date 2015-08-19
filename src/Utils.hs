@@ -20,7 +20,7 @@ getTextsAfter :: T.Text -> T.Text -> [Maybe T.Text]
 getTextsAfter a b = getElementsAfter a $ dequote $ getTagTexts b
 
 getOpenTags :: T.Text -> [Tag T.Text]
-getOpenTags a = filter isTagOpen (parseTags a)
+getOpenTags = filter isTagOpen . parseTags
 
 dequote :: [T.Text] -> [T.Text]
 dequote = filter (not . T.null) 
@@ -33,8 +33,7 @@ getElementAfter a c b = do
 
 getElementAfter' :: Int -> Int -> [b] -> Maybe b
 getElementAfter' index count list = do
-  result <- listToMaybe $ drop (index+count) list
-  return result
+  listToMaybe $ drop (index+count) list
 
 getElementsAfter :: (Eq a) => a -> [a] -> [Maybe a]
 getElementsAfter a b = do
@@ -54,11 +53,10 @@ getParameterAt a n = do
   return a2
 
 getParametersAsString :: T.Text -> Maybe T.Text
-getParametersAsString a = listToMaybe . drop 1 $ T.splitOn "?" a
+getParametersAsString = listToMaybe . drop 1 . T.splitOn "?" 
 
 getParameterAt' :: T.Text -> Int -> Maybe T.Text
-getParameterAt' a n = getElementAt list n
-                      where list = T.splitOn "&" a
+getParameterAt' a n = getElementAt (T.splitOn "&" a) n
                          
 getElementAt :: [a] -> Int -> Maybe a
 getElementAt a n = if n > length a - 1
