@@ -58,33 +58,6 @@ getLocationHref a = filter (T.isInfixOf "location.href") a
 getOnClick :: [Tag T.Text] -> [T.Text]
 getOnClick = dequote . map (fromAttrib "onclick")
 
-{--
-parseVIN :: T.Text -> Maybe T.Text
-parseVIN = getElementAfter "Stelnummer" 0 . dequote . getTagTexts
-
--- The rules in this wikipedia article is used.
--- https://en.wikipedia.org/wiki/Vehicle_identification_number
--- No VIN check digit calculation is performed.
-
-validateVIN :: T.Text -> Maybe T.Text
-validateVIN a
-  | isValid a = Just a
-  | otherwise = Nothing
-
-isValid :: T.Text -> Bool
-isValid = isValid' . T.unpack 
-
-isValid' :: String -> Bool
-isValid' a = length a == 17 && (and $ map isDigitOrUpperLetter a)
-
-
-isDigitOrUpperLetter :: Char -> Bool
-isDigitOrUpperLetter a
-  | isDigit a = True 
-  | isLetter a && isUpper a && a /= 'Q' && a /= 'O' && a /= 'I' = True
-  | otherwise = False
---}
-
 getVINHTML :: T.Text -> IO (Maybe T.Text)
 getVINHTML a = do
   manager <- liftIO $ newManager defaultManagerSettings
