@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, getTextAfter, getTextsAfter, getTextAfterAt, deleteEveryNth) where
+module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, extractText, getTextAfter, getTextsAfter, getTextAfterAt, deleteEveryNth) where
 
 import Data.List.Split
 import Data.List (elemIndex, elemIndices) 
@@ -79,7 +79,6 @@ getTagStrings = map T.unpack . dequote . getTagTexts . T.pack
 -- Take all relevant tagTexts from the HTML tag soup. Yeah, it's a convoluted process...
 getTagTexts :: T.Text -> [T.Text]
 getTagTexts = map extractText . filter isTagText . parseTags 
-  where extractText = T.unwords . T.words . fromTagText
 
 deleteEveryNth :: Int -> [a] -> [a]    
 deleteEveryNth n = concat . map init . group n
@@ -87,5 +86,11 @@ deleteEveryNth n = concat . map init . group n
 group :: Int -> [a] -> [[a]]
 group n [] = []
 group n xs = take n xs : group n (drop n xs)
+
+extractText :: Tag T.Text -> T.Text
+extractText = removeBreaks . fromTagText
+
+removeBreaks :: T.Text -> T.Text
+removeBreaks = T.unwords . T.words
 
 

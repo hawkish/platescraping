@@ -5,7 +5,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 module SurveyorRapportType (initSurveyorRapport, SurveyorRapport, Surveyor, Vehicle, SurveyorDetails, ErrorOverview, ServiceRemarks) where
 
-import Utils (getElementAfter, getElementsAfter, getElementAt, dequote, getTagTexts, getTextAfter, getTextAfterAt, getTextsAfter, deleteEveryNth)
+import Utils (getElementAfter, getElementsAfter, getElementAt, dequote, extractText, getTagTexts, getTextAfter, getTextAfterAt, getTextsAfter, deleteEveryNth)
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, Tag, Tag(TagOpen), (~/=), (~==))
 import qualified Text.HTML.TagSoup as TS
 import qualified Data.Text as T
@@ -81,7 +81,6 @@ getErrorTexts a = transpose ([getTitles a] ++ [getInformation a])
 -- The reverse . del_every_nth .reverse deletes the class=numbers text from the list.
 getInformation :: T.Text -> [T.Text]
 getInformation = reverse . deleteEveryNth 2 . reverse . dequote . map extractText . (filter isTagText) . getClassErrorList . parseTags
-                 where extractText = T.unwords . T.words . fromTagText
 
 getTitles :: T.Text -> [T.Text]
 getTitles = dequote . getTitleAttribs . (filter isTagOpen) . getClassErrorList . parseTags
@@ -97,7 +96,6 @@ initServiceRemarks a = MkServiceRemarks {_remarks = getServiceRemarks a }
 
 getServiceRemarks :: T.Text -> [T.Text]
 getServiceRemarks = dequote . map extractText . (filter isTagText) . getClassServiceRemark . parseTags
-                   where extractText = T.unwords . T.words . fromTagText
 
 getClassServiceRemark = takeWhile (~/= ("<div class=clear>" :: String)) . dropWhile (~/= ("<div class=serviceRemarkBullet>" :: String))
 
