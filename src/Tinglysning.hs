@@ -212,29 +212,20 @@ procFstResponse response = do
   return (_afPfm, viewState, cookieList)
 
 filterForm :: T.Text -> Maybe T.Text
-filterForm a = case listToMaybe $ filter (isTagOpenName "form") (parseTags a) of
-               Nothing -> Nothing
-               Just result -> Just (fromAttrib "action" result)
+filterForm = fmap (fromAttrib "action") . listToMaybe . filter (isTagOpenName "form") . parseTags
+
 
 filterInputViewState :: T.Text -> Maybe T.Text
-filterInputViewState a = case listToMaybe $ filter (~== ("<input name=javax.faces.ViewState" :: String)) $ filter (isTagOpenName "input") (parseTags a) of
-                 Nothing -> Nothing
-                 Just result -> Just (fromAttrib "value" result)
+filterInputViewState = fmap (fromAttrib "value") . listToMaybe . filter (~== ("<input name=javax.faces.ViewState" :: String)) . filter (isTagOpenName "input") . parseTags
 
 filterXMLContent :: T.Text -> Maybe T.Text
-filterXMLContent a = case listToMaybe $ filter (isTagOpenName "content") (parseTags a) of
-               Nothing -> Nothing
-               Just result -> Just (fromAttrib "action" result)
+filterXMLContent = fmap (fromAttrib "action") . listToMaybe . filter (isTagOpenName "content") . parseTags
 
 filterAnchor :: T.Text -> Maybe T.Text
-filterAnchor a = case listToMaybe $ filter (~== ("<a name=content:center:bilbogenresults:bilerid:0:visbildetaljer" :: String)) $ filter (isTagOpenName "a") (parseTags a) of
-                 Nothing -> Nothing
-                 Just result -> Just (fromAttrib "onclick" result)
+filterAnchor = fmap (fromAttrib "onclick") . listToMaybe . filter (~== ("<a name=content:center:bilbogenresults:bilerid:0:visbildetaljer" :: String)) . filter (isTagOpenName "a") . parseTags
 
 filterInputRangeStart :: T.Text -> Maybe T.Text
-filterInputRangeStart a = case listToMaybe $ filter (~== ("<input name=content:center:bilbogenresults:bilerid:rangeStart" :: String)) $ filter (isTagOpenName "input") (parseTags a) of
-                 Nothing -> Nothing
-                 Just result -> Just (fromAttrib "value" result)
+filterInputRangeStart = fmap (fromAttrib "value") . listToMaybe . filter (~== ("<input name=content:center:bilbogenresults:bilerid:rangeStart" :: String)) . filter (isTagOpenName "input") . parseTags
 
 getListItemValue :: T.Text -> Maybe T.Text
 getListItemValue a = do
