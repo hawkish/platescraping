@@ -5,7 +5,7 @@ module Trafikstyrelsen (getSurveyorRapports) where
 
 import Network.HTTP.Client
 import Control.Exception
-import Data.Char
+-- import Data.Char
 -- import Control.Monad
 import Control.Monad.Trans
 -- import Control.Monad.Trans.Maybe
@@ -13,23 +13,9 @@ import Control.Monad.Trans
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
-import Utils (getElementAfter, getTagTexts, getOpenTags, dequote)
-import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, fromAttrib, Tag)
+import Utils (getOpenTags, dequote)
+import Text.HTML.TagSoup (fromAttrib, Tag)
 import SurveyorRapportType (initSurveyorRapport, SurveyorRapport)
-
-t = T.pack "<h2>Fejloversigt<span class=\"floatRightNoClear infoText hideOnSmall\">Hold musen over tallet for beskrivelse</span><span class=\"floatRightNoClear infoText hideOnLarge hideOnMedium\">Tryk p\229 tallet for beskrivelse</span></h2></div>\r\n\t<div class=\"clear\"></div>\r\n    <div class=\"errorList\">\r\n        \r\n        \r\n                <div class=\"number\" title='Bremser'>5</div>\r\n\t            <div class=\"information\">st\230nksk\230rm, t\230ret, venstre, bag</div>\r\n            \r\n                <div class=\"number\" title='El-anl\230g, lygter, reflekser mv.'>6</div>\r\n\t            <div class=\"information\">nummerpladelygte, virker ikke, venstre</div>\r\n            \r\n    </div>\r\n</div>\r\n\r\n<div class=\"clear\"></div>"
-
-a = T.pack "/Sider/synsrapport.aspx?Inspection=12319436&Vin=SJNFAAN16U0057657"
-
-b = T.pack "/Sider/synsrapport.aspx?Inspection=15659516&Vin=VF33CNFUB82505218"
-
-c = T.pack "/Sider/synsrapport.aspx?Inspection=15790626&Vin=VF33CNFUB82505218"
-
-e = T.pack "/Sider/synsrapport.aspx?Inspection=15618660&Vin=SB153ABK00E152978"
-
-h = T.pack "YB24553"
-
-x = [c,e]
 
 getSurveyorRapports :: T.Text -> IO [Maybe SurveyorRapport]
 getSurveyorRapports a = do
@@ -72,12 +58,14 @@ getLocationHref a = filter (T.isInfixOf "location.href") a
 getOnClick :: [Tag T.Text] -> [T.Text]
 getOnClick = dequote . map (fromAttrib "onclick")
 
+{--
 parseVIN :: T.Text -> Maybe T.Text
 parseVIN = getElementAfter "Stelnummer" 0 . dequote . getTagTexts
 
 -- The rules in this wikipedia article is used.
 -- https://en.wikipedia.org/wiki/Vehicle_identification_number
 -- No VIN check digit calculation is performed.
+
 validateVIN :: T.Text -> Maybe T.Text
 validateVIN a
   | isValid a = Just a
@@ -89,11 +77,13 @@ isValid = isValid' . T.unpack
 isValid' :: String -> Bool
 isValid' a = length a == 17 && (and $ map isDigitOrUpperLetter a)
 
+
 isDigitOrUpperLetter :: Char -> Bool
 isDigitOrUpperLetter a
   | isDigit a = True 
   | isLetter a && isUpper a && a /= 'Q' && a /= 'O' && a /= 'I' = True
   | otherwise = False
+--}
 
 getVINHTML :: T.Text -> IO (Maybe T.Text)
 getVINHTML a = do

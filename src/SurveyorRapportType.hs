@@ -5,11 +5,11 @@
 {-# LANGUAGE DeriveGeneric #-}
 module SurveyorRapportType (initSurveyorRapport, SurveyorRapport, Surveyor, Vehicle, SurveyorDetails, ErrorOverview, ServiceRemarks) where
 
-import Utils (getElementAfter, getElementsAfter, getElementAt, dequote, extractText, getTagTexts, getTextAfter, getTextAfterAt, getTextsAfter, deleteEveryNth)
-import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, Tag, Tag(TagOpen), (~/=), (~==))
+import Utils (dequote, extractText, getTextAfterAt, deleteEveryNth)
+import Text.HTML.TagSoup (parseTags, isTagText, isTagOpen, Tag, (~/=))
 import qualified Text.HTML.TagSoup as TS
 import qualified Data.Text as T
-import Control.Lens
+--import Control.Lens
 import GHC.Generics
 import Data.List
 
@@ -47,12 +47,12 @@ data SurveyorRapport = MkSurveyorRapport { _surveyor :: Surveyor
                                          } deriving (Eq, Show, Read, Generic)
 
 
-makeLenses ''Surveyor
-makeLenses ''Vehicle
-makeLenses ''SurveyorDetails
-makeLenses ''ErrorOverview
-makeLenses ''ServiceRemarks
-makeLenses ''SurveyorRapport
+--makeLenses ''Surveyor
+--makeLenses ''Vehicle
+--makeLenses ''SurveyorDetails
+--makeLenses ''ErrorOverview
+--makeLenses ''ServiceRemarks
+--makeLenses ''SurveyorRapport
 
 initSurveyor a = MkSurveyor { _surveyorName = getTextAfterAt (T.pack "Virksomhed") 2 a
                             , _cvr = getTextAfterAt (T.pack "CVR") 2 a

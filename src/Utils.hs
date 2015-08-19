@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, extractText, getTextAfter, getTextsAfter, getTextAfterAt, deleteEveryNth) where
+module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getOpenTags, dequote, extractText, getTextAfter, getTagTexts, getTextsAfter, getTextAfterAt, deleteEveryNth) where
 
 import Data.List.Split
 import Data.List (elemIndex, elemIndices) 
 import Data.Maybe
 
 import qualified Data.Text as T
-import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, fromAttrib, Tag)
+import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, Tag)
 
 
 getTextAfterAt :: T.Text -> Int -> T.Text -> Maybe T.Text

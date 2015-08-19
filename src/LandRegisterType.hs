@@ -5,10 +5,10 @@
 {-# LANGUAGE DeriveGeneric #-}
 module LandRegisterType (initCreditor, initDebtor, initMotorregister, initDocument, initAdditionalText, initLandRegister, Creditor, Debtor, Motorregister, Document, AdditionalText, LandRegister) where
 
-import Utils (getElementAfter, getElementsAfter, getElementAt, dequote, getTagTexts, getTextAfter, getTextsAfter)
+import Utils (getElementAt, dequote, getTagTexts, getTextAfter, getTextsAfter)
 import Data.Maybe
 import qualified Data.Text as T
-import Control.Lens
+--import Control.Lens
 import GHC.Generics
 
 data LandRegister = MkLandRegister { _motorregister :: Motorregister
@@ -41,12 +41,12 @@ data Debtor = MkDebtor { _dname :: Maybe T.Text
 
 data AdditionalText = MkAdditionalText { _text :: [Maybe T.Text] } deriving (Eq, Show, Read, Generic)
 
-makeLenses ''LandRegister
-makeLenses ''Motorregister
-makeLenses ''Document
-makeLenses ''Creditor
-makeLenses ''Debtor
-makeLenses ''AdditionalText
+--makeLenses ''LandRegister
+--makeLenses ''Motorregister
+--makeLenses ''Document
+--makeLenses ''Creditor
+--makeLenses ''Debtor
+--makeLenses ''AdditionalText
 
 initLandRegister vin a = MkLandRegister { _motorregister = initMotorregister vin a, _document = initDocument a, _creditor = initCreditor a, _debtor = initDebtor a, _additionalText = initAdditionalText a }
 
