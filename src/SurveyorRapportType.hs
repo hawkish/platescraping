@@ -5,7 +5,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 module SurveyorRapportType (initSurveyorRapport, SurveyorRapport, Surveyor, Vehicle, SurveyorDetails, ErrorOverview, ServiceRemarks) where
 
-import Utils (getElementAfter, getElementsAfter, getElementAt, dequote, getTagTexts, getTextAfter, getTextAfterAt, getTextsAfter, del_every_nth)
+import Utils (getElementAfter, getElementsAfter, getElementAt, dequote, getTagTexts, getTextAfter, getTextAfterAt, getTextsAfter, deleteEveryNth)
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, Tag, Tag(TagOpen), (~/=), (~==))
 import qualified Text.HTML.TagSoup as TS
 import qualified Data.Text as T
@@ -80,7 +80,7 @@ getErrorTexts a = transpose ([getTitles a] ++ [getInformation a])
 
 -- The reverse . del_every_nth .reverse deletes the class=numbers text from the list.
 getInformation :: T.Text -> [T.Text]
-getInformation = reverse . del_every_nth 2 . reverse . dequote . map extractText . (filter isTagText) . getClassErrorList . parseTags
+getInformation = reverse . deleteEveryNth 2 . reverse . dequote . map extractText . (filter isTagText) . getClassErrorList . parseTags
                  where extractText = T.unwords . T.words . fromTagText
 
 getTitles :: T.Text -> [T.Text]

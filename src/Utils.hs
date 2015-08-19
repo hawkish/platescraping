@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, getTextAfter, getTextsAfter, getTextAfterAt, del_every_nth) where
+module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getTagTexts, getOpenTags, dequote, getTextAfter, getTextsAfter, getTextAfterAt, deleteEveryNth) where
 
 import Data.List.Split
 import Data.List (elemIndex, elemIndices) 
@@ -81,8 +81,8 @@ getTagTexts :: T.Text -> [T.Text]
 getTagTexts = map extractText . filter isTagText . parseTags 
   where extractText = T.unwords . T.words . fromTagText
 
-del_every_nth :: Int -> [a] -> [a]    
-del_every_nth n = concat . map init . group n
+deleteEveryNth :: Int -> [a] -> [a]    
+deleteEveryNth n = concat . map init . group n
 
 group :: Int -> [a] -> [[a]]
 group n [] = []
