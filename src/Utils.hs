@@ -14,7 +14,7 @@ getTextAfterAt :: T.Text -> Int -> T.Text -> Maybe T.Text
 getTextAfterAt a c b = getElementAfter a c $ getTagTexts b
 
 getTextAfter :: T.Text -> T.Text -> Maybe T.Text
-getTextAfter a b = getElementAfter a 0 $ dequote $ getTagTexts b
+getTextAfter a b = getElementAfter a 1 $ dequote $ getTagTexts b
 
 getTextsAfter :: T.Text -> T.Text -> [Maybe T.Text]
 getTextsAfter a b = getElementsAfter a $ dequote $ getTagTexts b
