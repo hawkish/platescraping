@@ -44,7 +44,7 @@ getSurveyorRapport a = do
   return $ fmap initSurveyorRapport a1
 
 parseLinks :: T.Text -> [T.Text]
-parseLinks = filterLink . splitAtQuote . getLocationHref . getOnClick . getOpenTags
+parseLinks = filterLink . splitAtQuote . filterLocationHref . getOnClick . getOpenTags
 
 filterLink :: [T.Text] -> [T.Text]
 filterLink a = filter (T.isInfixOf "/Sider") a 
@@ -52,8 +52,8 @@ filterLink a = filter (T.isInfixOf "/Sider") a
 splitAtQuote :: [T.Text] -> [T.Text]
 splitAtQuote = concat . map (T.split (== '\"'))
 
-getLocationHref :: [T.Text] -> [T.Text]
-getLocationHref a = filter (T.isInfixOf "location.href") a 
+filterLocationHref :: [T.Text] -> [T.Text]
+filterLocationHref a = filter (T.isInfixOf "location.href") a 
 
 getOnClick :: [Tag T.Text] -> [T.Text]
 getOnClick = dequote . map (fromAttrib "onclick")
