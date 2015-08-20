@@ -5,11 +5,7 @@ module Trafikstyrelsen (getSurveyorRapports) where
 
 import Network.HTTP.Client
 import Control.Exception
--- import Data.Char
--- import Control.Monad
 import Control.Monad.Trans
--- import Control.Monad.Trans.Maybe
---import Control.Applicative
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
@@ -47,13 +43,13 @@ parseLinks :: T.Text -> [T.Text]
 parseLinks = filterLink . splitAtQuote . filterLocationHref . getOnClick . getOpenTags
 
 filterLink :: [T.Text] -> [T.Text]
-filterLink a = filter (T.isInfixOf "/Sider") a 
+filterLink = filter (T.isInfixOf "/Sider") 
 
 splitAtQuote :: [T.Text] -> [T.Text]
 splitAtQuote = concat . map (T.split (== '\"'))
 
 filterLocationHref :: [T.Text] -> [T.Text]
-filterLocationHref a = filter (T.isInfixOf "location.href") a 
+filterLocationHref = filter (T.isInfixOf "location.href") 
 
 getOnClick :: [Tag T.Text] -> [T.Text]
 getOnClick = dequote . map (fromAttrib "onclick")
