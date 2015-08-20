@@ -87,8 +87,9 @@ searchUsingVin vin = do
 -- The rules in this wikipedia article is used.
 -- https://en.wikipedia.org/wiki/Vehicle_identification_number
 -- No VIN check digit calculation is performed.
+-- Skipped the 17 length rule since some VINs are much shorter.
 validateVIN :: String -> Bool
-validateVIN a = length a == 17 && (and $ map isDigitOrUpperLetter a)
+validateVIN a = length a > 4 && (and $ map isDigitOrUpperLetter a)
 
 isDigitOrUpperLetter :: Char -> Bool
 isDigitOrUpperLetter a
