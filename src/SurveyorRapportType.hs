@@ -12,6 +12,7 @@ import qualified Data.Text as T
 --import Control.Lens
 import GHC.Generics
 import Data.List
+import Data.Aeson (ToJSON)
 
 data Surveyor = MkSurveyor { _surveyorName :: Maybe T.Text
                            , _cvr :: Maybe T.Text
@@ -46,6 +47,12 @@ data SurveyorRapport = MkSurveyorRapport { _surveyor :: Surveyor
                                          , _serviceRemarks :: ServiceRemarks
                                          } deriving (Eq, Show, Read, Generic)
 
+instance ToJSON SurveyorRapport
+instance ToJSON Surveyor
+instance ToJSON Vehicle
+instance ToJSON SurveyorDetails
+instance ToJSON ErrorOverview
+instance ToJSON ServiceRemarks
 
 --makeLenses ''Surveyor
 --makeLenses ''Vehicle

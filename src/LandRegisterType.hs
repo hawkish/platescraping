@@ -10,6 +10,7 @@ import Data.Maybe
 import qualified Data.Text as T
 --import Control.Lens
 import GHC.Generics
+import Data.Aeson (ToJSON)
 
 data LandRegister = MkLandRegister { _motorregister :: Motorregister
                                    , _document :: Document
@@ -41,6 +42,12 @@ data Debtor = MkDebtor { _dname :: Maybe T.Text
 
 data AdditionalText = MkAdditionalText { _text :: [Maybe T.Text] } deriving (Eq, Show, Read, Generic)
 
+instance ToJSON LandRegister
+instance ToJSON Motorregister
+instance ToJSON Document
+instance ToJSON AdditionalText
+instance ToJSON Creditor
+instance ToJSON Debtor
 --makeLenses ''LandRegister
 --makeLenses ''Motorregister
 --makeLenses ''Document

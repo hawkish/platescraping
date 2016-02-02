@@ -2,9 +2,6 @@
 
 import Trafikstyrelsen (getSurveyorRapports)
 import Tinglysning (getLandRegister)
-import ErrorType (initError, Error)
-
-
 import Data.Char
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
@@ -13,25 +10,10 @@ import Control.Monad.Trans
 import Network.HTTP.Types
 import Web.Scotty
 import Data.Aeson (ToJSON, encode)
-import LandRegisterType (LandRegister, Motorregister, Document, Creditor, Debtor, AdditionalText)
-import SurveyorRapportType (SurveyorRapport, Surveyor, Vehicle, SurveyorDetails, ErrorOverview, ServiceRemarks)
-
-instance ToJSON LandRegister
-instance ToJSON Motorregister
-instance ToJSON Document
-instance ToJSON Creditor
-instance ToJSON Debtor
-instance ToJSON AdditionalText
-
-instance ToJSON SurveyorRapport
-instance ToJSON Surveyor
-instance ToJSON Vehicle
-instance ToJSON SurveyorDetails
-instance ToJSON ErrorOverview
-instance ToJSON ServiceRemarks
-
-instance ToJSON Error
-
+import ErrorType (Error, initError)
+import Utils (unescapeJSONText)
+--import LandRegisterType (LandRegister, Motorregister, Document, Creditor, Debtor, AdditionalText)
+--import SurveyorRapportType (SurveyorRapport, Surveyor, Vehicle, SurveyorDetails, ErrorOverview, ServiceRemarks)
 
 main :: IO ()
 main = scotty 3000 $ do
@@ -70,19 +52,25 @@ main = scotty 3000 $ do
 
 errorJSON a b = TLE.decodeUtf8 $ encode $ initError (T.pack a) (T.pack b)
 
-searchUsingReg :: String -> IO (Maybe TL.Text)
+searchUsingReg :: String -> IO (Maybe T.Text)
 searchUsingReg reg = do
   surveyorRapports <- getSurveyorRapports (T.pack reg)
   if surveyorRapports == []
     then return Nothing
-    else return $ Just $ TLE.decodeUtf8 $ encode surveyorRapports
+    else return . Just . unescapeJSONText . TL.toStrict . TLE.decodeUtf8 $ encode surveyorRapports
   
-searchUsingVin :: String -> IO (Maybe TL.Text)
+searchUsingVin :: String -> IO (Maybe T.Text)
 searchUsingVin vin = do
   landRegister <- getLandRegister (T.pack vin)
   case landRegister of
     Nothing -> return Nothing
-    Just landRegister -> return $ Just $ TLE.decodeUtf8 $ encode landRegister
+    Just landRegister -> return . Just . unescapeJSONText. TL.toStrict . TLE.decodeUtf8 $ encode landRegister
+
+test vin = do
+  landRegister <- getLandRegister (T.pack vin)
+  case landRegister of
+    Nothing -> return Nothing
+    Just landRegister -> return . Just . unescapeJSONText . TL.toStrict. TLE.decodeUtf8 $ encode landRegister
 
 -- The rules in this wikipedia article is used.
 -- https://en.wikipedia.org/wiki/Vehicle_identification_number

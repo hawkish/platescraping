@@ -8,13 +8,10 @@ executable licenseplate
   hs-source-dirs:  src
   build-depends:   base>=4.7
                  , tagsoup==0.13.3
-                 , HTTP==4000.2.19
+                 , HTTP==4000.2.20
                  , conduit==1.2.4.2
                  , http-types==0.8.6
                  , http-client==0.4.15
-                 , http-client-openssl==0.2.0.0
-                 , http-client-tls==0.2.2
-                 , HsOpenSSL==0.11.1.1
                  , bytestring==0.10.6.0
                  , split==0.1.2.3
                  , mtl==2.2.1
@@ -26,4 +23,12 @@ executable licenseplate
                  , scotty==0.10.1
                  , aeson==0.9.0.1
                  , transformers==0.4.2.0
-  ghc-options: -O2 -W -threaded -rtsopts
+                 , cgi==3001.2.2.2
+                 , multipart==0.1.2
+-- Linux
+--                 , HsOpenSSL==0.11.1.1
+--                 , http-client-openssl==0.2.0.0
+-- OSX
+                 , http-client-tls==0.2.0.0
+  ghc-options: -O2 -Wall -threaded -rtsopts
+

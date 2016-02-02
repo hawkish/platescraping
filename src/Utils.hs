@@ -1,10 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getOpenTags, dequote, extractText, getTextAfter, getTagTexts, getTextsAfter, getTextAfterAt, deleteEveryNth) where
+module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getOpenTags, dequote, extractText, getTextAfter, getTagTexts, getTextsAfter, getTextAfterAt, deleteEveryNth, unescapeJSONText) where
 
 import Data.List.Split
 import Data.List (elemIndex, elemIndices) 
 import Data.Maybe
+
 
 import qualified Data.Text as T
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, Tag)
@@ -91,4 +92,11 @@ extractText = removeBreaks . fromTagText
 removeBreaks :: T.Text -> T.Text
 removeBreaks = T.unwords . T.words
 
+removeOccurrences :: Eq a => a -> [a] -> [a]
+removeOccurrences elem list = filter (\x -> x /= elem) list
 
+unescapeJSON :: String -> String
+unescapeJSON = removeOccurrences '\\' 
+
+unescapeJSONText :: T.Text -> T.Text
+unescapeJSONText = T.pack . removeOccurrences '\\' . T.unpack

@@ -4,9 +4,10 @@
 module Tinglysning (getLandRegister) where
 
 import Text.HTML.TagSoup (parseTags, (~==), fromAttrib, isTagOpenName)
-import qualified OpenSSL.Session as SSL
+--import qualified OpenSSL.Session as SSL
 import Network.HTTP.Client
-import Network.HTTP.Client.OpenSSL
+--import Network.HTTP.Client.OpenSSL
+import Network.HTTP.Client.TLS
 import Network.HTTP.Types.Header
 import Control.Exception
 import Data.List
@@ -21,10 +22,10 @@ import Control.Monad.Trans
 import Data.Maybe
 
 getLandRegister :: T.Text -> IO (Maybe LandRegister)
-getLandRegister vin = withOpenSSL $ do
---doRequests vin = do
-  manager <- newManager $ opensslManagerSettings SSL.context
-  --manager <- newManager tlsManagerSettings
+--getLandRegister vin = withOpenSSL $ do
+  --manager <- newManager $ opensslManagerSettings SSL.context
+getLandRegister vin = do
+  manager <- newManager tlsManagerSettings
   putStrLn "Doing first request..."
   a1 <- doFstRequest manager
   case a1 of
