@@ -6,7 +6,6 @@ import Data.List.Split
 import Data.List (elemIndex, elemIndices) 
 import Data.Maybe
 
-
 import qualified Data.Text as T
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, Tag)
 
@@ -100,3 +99,5 @@ unescapeJSON = removeOccurrences '\\'
 
 unescapeJSONText :: T.Text -> T.Text
 unescapeJSONText = T.pack . removeOccurrences '\\' . T.unpack
+
+n = "{\"_motorregister\":{\"_brand\":\"VOLKSWAGEN UP! 1.0 FSI BMT 60 HK 4-D\216RS\",\"_year\":\"2013\",\"_vin\":\"WVWZZZAAZDD084120\",\"_license\":\"AD12350\"},\"_debtor\":{\"_dname\":\"Steen Norby Nielsen\",\"_cpr\":\"220361-****\"},\"_document\":{\"_mortgage\":\"1\",\"_rateOfInterest\":\"3,95 %\",\"_date\":\"25.01.2013-1004237048\",\"_principal\":\"120.716 DKK\",\"_documentType\":\"Ejendomsforbehold\"},\"_creditor\":{\"_cvr\":\"31433428\",\"_cname\":\"Al Finans A/S\"},\"_additionalText\":{\"_text\":[\"Advarsel: K\248ret\248jet i anmeldelsen kan v\230re pantsat efter de f\248r 1/6 1993 g\230ldende regler.\",\"Advarsel: K\248ret\248jet med stelnr WVWZZZAAZDD084120 ses i Motorregisteret med anden(t) m\230rke/type/\229rgang/registreringsnummer\"]}}"
