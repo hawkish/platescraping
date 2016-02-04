@@ -5,16 +5,8 @@ module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, g
 import Data.List.Split
 import Data.List (elemIndex, elemIndices) 
 import Data.Maybe
-import qualified Text.Parsec as Parsec
--- import Text.Parsec ((<?>))
--- import Control.Applicative
--- import Control.Monad.Identity (Identity)
-
 import qualified Data.Text as T
 import Text.HTML.TagSoup (parseTags, fromTagText, isTagText, isTagOpen, Tag)
-
-parse rule text = Parsec.parse rule "(source)" text
-
 
 getTextAfterAt :: T.Text -> Int -> T.Text -> Maybe T.Text
 getTextAfterAt a c b = getElementAfter a c $ getTagTexts b
@@ -100,23 +92,16 @@ removeBreaks = T.unwords . T.words
 removeOccurrences :: Eq a => a -> [a] -> [a]
 removeOccurrences elem list = filter (\x -> x /= elem) list
 
+n = "{\"_motorregister\":{\"_brand\":\"VOLKSWAGEN UP! 1.0 FSI BMT 60 HK 4-D\216RS\",\"_year\":\"2013\",\"_vin\":\"WVWZZZAAZDD084120\",\"_license\":\"AD12350\"},\"_debtor\":{\"_dname\":\"Steen Norby Nielsen\",\"_cpr\":\"220361-****\"},\"_document\":{\"_mortgage\":\"1\",\"_rateOfInterest\":\"3,95 %\",\"_date\":\"25.01.2013-1004237048\",\"_principal\":\"120.716 DKK\",\"_documentType\":\"Ejendomsforbehold\"},\"_creditor\":{\"_cvr\":\"31433428\",\"_cname\":\"Al Finans A/S\"},\"_additionalText\":{\"_text\":[\"Advarsel: K\248ret\248jet i anmeldelsen kan v\230re pantsat efter de f\248r 1/6 1993 g\230ldende regler.\",\"Advarsel: K\248ret\248jet med stelnr WVWZZZAAZDD084120 ses i Motorregisteret med anden(t) m\230rke/type/\229rgang/registreringsnummer\"]}}"
+
 unescapeJSON :: String -> String
-unescapeJSON = removeOccurrences '\\' 
+unescapeJSON = T.unpack . removeBackslash . T.pack
 
 unescapeJSONText :: T.Text -> T.Text
-unescapeJSONText = T.pack . removeOccurrences '\\' . T.unpack
+unescapeJSONText = removeBackslash 
 
-myParser :: Parsec.Parsec String () (String,String)
-myParser = do
-  letters <- Parsec.many1 Parsec.letter
-  Parsec.spaces
-  digits <- Parsec.many1 Parsec.digit
-  return (letters,digits)
+splitAtBackslash :: T.Text -> [T.Text]
+splitAtBackslash = T.splitOn "\""
 
-mySeparator :: Parsec.Parsec String () ()
-mySeparator = do
-    Parsec.char '\\'
-    Parsec.char '"'
-
-
-n = "{\"_motorregister\":{\"_brand\":\"VOLKSWAGEN UP! 1.0 FSI BMT 60 HK 4-D\216RS\",\"_year\":\"2013\",\"_vin\":\"WVWZZZAAZDD084120\",\"_license\":\"AD12350\"},\"_debtor\":{\"_dname\":\"Steen Norby Nielsen\",\"_cpr\":\"220361-****\"},\"_document\":{\"_mortgage\":\"1\",\"_rateOfInterest\":\"3,95 %\",\"_date\":\"25.01.2013-1004237048\",\"_principal\":\"120.716 DKK\",\"_documentType\":\"Ejendomsforbehold\"},\"_creditor\":{\"_cvr\":\"31433428\",\"_cname\":\"Al Finans A/S\"},\"_additionalText\":{\"_text\":[\"Advarsel: K\248ret\248jet i anmeldelsen kan v\230re pantsat efter de f\248r 1/6 1993 g\230ldende regler.\",\"Advarsel: K\248ret\248jet med stelnr WVWZZZAAZDD084120 ses i Motorregisteret med anden(t) m\230rke/type/\229rgang/registreringsnummer\"]}}"
+removeBackslash :: T.Text -> T.Text
+removeBackslash a = T.intercalate (T.pack "\"") $ splitAtBackslash a
