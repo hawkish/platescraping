@@ -100,8 +100,8 @@ unescapeJSON = T.unpack . removeBackslash . T.pack
 unescapeJSONText :: T.Text -> T.Text
 unescapeJSONText = removeBackslash 
 
-splitAtBackslash :: T.Text -> [T.Text]
-splitAtBackslash = T.splitOn "\""
-
 removeBackslash :: T.Text -> T.Text
-removeBackslash a = T.intercalate (T.pack "\"") $ splitAtBackslash a
+removeBackslash c = replaceText "\"" "\"" c
+
+replaceText :: T.Text -> T.Text -> T.Text -> T.Text
+replaceText a b c = T.intercalate b $ T.splitOn a c
