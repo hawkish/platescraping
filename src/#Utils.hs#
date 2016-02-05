@@ -103,6 +103,8 @@ unescapeJSONText = removeBackslash
 removeBackslash :: T.Text -> T.Text
 removeBackslash c = replaceText "\"" "\"" c
 
-{--Replaces each occurance of the substring with the replacement substring in the operation text --}
+{--Replaces each occurance of the substring with the replacement substring in the operation text.
+Logically the text is split into a list at the old substring. The list is then interspersed with the new substring.
+--}
 replaceText :: T.Text -> T.Text -> T.Text -> T.Text
 replaceText old new a = T.intercalate new $ T.splitOn old a
