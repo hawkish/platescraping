@@ -36,7 +36,6 @@ getElementAfter' index count list = do
 getElementsAfter :: (Eq a) => a -> [a] -> [Maybe a]
 getElementsAfter a b = do
   let indices = elemIndices a b
-  let result = getElementsAfter' indices b
   getElementsAfter' indices b
 
 getElementsAfter' :: [Int] -> [a] -> [Maybe a]
