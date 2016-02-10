@@ -57,20 +57,14 @@ searchUsingReg reg = do
   surveyorRapports <- getSurveyorRapports (T.pack reg)
   if surveyorRapports == []
     then return Nothing
-    else return . Just . unescapeJSONText . TL.toStrict . TLE.decodeUtf8 $ encode surveyorRapports
+    else return . Just . TL.toStrict . TLE.decodeUtf8 $ encode surveyorRapports
   
 searchUsingVin :: String -> IO (Maybe T.Text)
 searchUsingVin vin = do
   landRegister <- getLandRegister (T.pack vin)
   case landRegister of
     Nothing -> return Nothing
-    Just landRegister -> return . Just . unescapeJSONText. TL.toStrict . TLE.decodeUtf8 $ encode landRegister
-
-test vin = do
-  landRegister <- getLandRegister (T.pack vin)
-  case landRegister of
-    Nothing -> return Nothing
-    Just landRegister -> return . Just . unescapeJSONText . TL.toStrict. TLE.decodeUtf8 $ encode landRegister
+    Just landRegister -> return . Just . TL.toStrict . TLE.decodeUtf8 $ encode landRegister
 
 -- The rules in this wikipedia article is used.
 -- https://en.wikipedia.org/wiki/Vehicle_identification_number

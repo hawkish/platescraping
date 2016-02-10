@@ -19,7 +19,7 @@ executable licenseplate
                  , mtl==2.2.1
                  , multipart==0.1.2
                  , network==2.6.0.2
-                 , parsec >= 3.1.4
+                 --, parsec >= 3.1.4
                  , scotty==0.10.1
                  , split==0.1.2.3
                  , tagsoup==0.13.3
@@ -27,9 +27,9 @@ executable licenseplate
                  , time==1.5.0.1
                  , transformers==0.4.2.0
 -- Linux
---                 , HsOpenSSL==0.11.1.1
---                 , http-client-openssl==0.2.0.0
+                 , HsOpenSSL==0.11.1.1
+                 , http-client-openssl==0.2.0.0
 -- OSX
-                 , http-client-tls==0.2.0.0
+--                 , http-client-tls==0.2.0.0
   ghc-options: -O2 -Wall -threaded -rtsopts
 

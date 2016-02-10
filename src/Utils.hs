@@ -92,8 +92,6 @@ removeBreaks = T.unwords . T.words
 removeOccurrences :: Eq a => a -> [a] -> [a]
 removeOccurrences elem list = filter (\x -> x /= elem) list
 
-n = "{\"_motorregister\":{\"_brand\":\"VOLKSWAGEN UP! 1.0 FSI BMT 60 HK 4-D\216RS\",\"_year\":\"2013\",\"_vin\":\"WVWZZZAAZDD084120\",\"_license\":\"AD12350\"},\"_debtor\":{\"_dname\":\"Steen Norby Nielsen\",\"_cpr\":\"220361-****\"},\"_document\":{\"_mortgage\":\"1\",\"_rateOfInterest\":\"3,95 %\",\"_date\":\"25.01.2013-1004237048\",\"_principal\":\"120.716 DKK\",\"_documentType\":\"Ejendomsforbehold\"},\"_creditor\":{\"_cvr\":\"31433428\",\"_cname\":\"Al Finans A/S\"},\"_additionalText\":{\"_text\":[\"Advarsel: K\248ret\248jet i anmeldelsen kan v\230re pantsat efter de f\248r 1/6 1993 g\230ldende regler.\",\"Advarsel: K\248ret\248jet med stelnr WVWZZZAAZDD084120 ses i Motorregisteret med anden(t) m\230rke/type/\229rgang/registreringsnummer\"]}}"
-
 unescapeJSON :: String -> String
 unescapeJSON = T.unpack . removeBackslash . T.pack
 
@@ -101,7 +99,7 @@ unescapeJSONText :: T.Text -> T.Text
 unescapeJSONText = removeBackslash 
 
 removeBackslash :: T.Text -> T.Text
-removeBackslash c = replaceText "\"" "\"" c
+removeBackslash c = replaceText "\"" (T.singleton '"') c
 
 {--Replaces each occurance of the substring with the replacement substring in the operation text.
 Logically the text is split into a list at the old substring. The list is then interspersed with the new substring.
