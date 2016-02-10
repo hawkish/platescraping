@@ -11,7 +11,7 @@ import Network.HTTP.Types
 import Web.Scotty
 import Data.Aeson (ToJSON, encode)
 import ErrorType (Error, initError)
-import Utils (unescapeJSONText)
+--import Utils (unescapeJSONText)
 --import LandRegisterType (LandRegister, Motorregister, Document, Creditor, Debtor, AdditionalText)
 --import SurveyorRapportType (SurveyorRapport, Surveyor, Vehicle, SurveyorDetails, ErrorOverview, ServiceRemarks)
 
