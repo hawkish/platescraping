@@ -21,7 +21,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
-import Utils (getParameterAt, getElementAt)
+import Utils (getParameterAt, getElementAt, maybeToEither)
 import LandRegisterType (initLandRegister, LandRegister)
 import Control.Monad.Trans
 import Data.Maybe
@@ -34,18 +34,18 @@ getLandRegister vin = withOpenSSL $ do
   putStrLn "Doing first request..."
   a1 <- doFstRequest manager
   case a1 of
-    Nothing -> do
+    Left ex -> do
       closeManager manager
       return Nothing
-    Just a1 -> do
+    Right a1 -> do
       let (_afPfm, viewState, cookieList) = a1
       putStrLn "Doing second request..."
       a2 <- doSndRequest manager _afPfm viewState cookieList 1 
       case a2 of
-        Nothing -> do
+        Left ex -> do
           closeManager manager
           return Nothing
-        Just a2 -> do
+        Right a2 -> do
           --putStrLn "Second processing done."
           let (_afPfm2, cookieList) = a2
           -- Maintaining viewState as is.
@@ -53,25 +53,25 @@ getLandRegister vin = withOpenSSL $ do
           -- a3 is a redirect. 
           a3 <- doTrdRequest manager vin _afPfm2 viewState cookieList 1
           case a3 of
-            Nothing -> do
+            Left ex -> do
               closeManager manager
               return Nothing
-            Just a3 -> do
+            Right a3 -> do
               let (viewState, rangeStart, listItemValue, cookieList) = a3
               putStrLn "Doing fourth request..."
               a4 <- doFrthRequest manager _afPfm2 rangeStart viewState listItemValue cookieList 1
               -- a4 is also a redirect. 
               case a4 of
-                Nothing -> do
+                Left ex -> do
                   closeManager manager
                   return Nothing
-                Just a4 -> do
+                Right a4 -> do
                   closeManager manager
                   let (html, cookieList) = a4
                   return $ Just $ initLandRegister (Just vin) html
 
 
-doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Maybe (T.Text, [Cookie]))
+doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Either SomeException (T.Text, [Cookie]))
 doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie redirects = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
   let referer = url `T.append` (T.pack "?") `T.append` _afPfm
@@ -96,11 +96,11 @@ doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie redirects
   case response of
    Left ex -> do
      putStrLn $ show ex
-     return Nothing
+     return $ Left ex
    Right response -> do
-     return $ Just response
+     return $ Right response
 
-doTrdRequest :: Manager -> T.Text -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Maybe (T.Text, T.Text, T.Text, [Cookie]))
+doTrdRequest :: Manager -> T.Text -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Either SomeException (T.Text, T.Text, T.Text, [Cookie]))
 doTrdRequest manager vin _afPfm viewState cookie redirects = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
@@ -128,12 +128,12 @@ doTrdRequest manager vin _afPfm viewState cookie redirects = do
   case response of
    Left ex -> do
      putStrLn $ show ex
-     return Nothing
+     return $ Left ex
    Right response -> do
      putStrLn "Processing..."
      let result = procTrdResponse response
      putStrLn "Processed."
-     return result
+     return $ maybeToEither "A processing error occurred." result
 
 procTrdResponse ::  (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, T.Text, [Cookie])
 procTrdResponse response = do
@@ -144,7 +144,7 @@ procTrdResponse response = do
   listItemValue <- getListItemValue html
   return (viewState, rangeStart, listItemValue, cookieList)
 
-doSndRequest :: Manager -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Maybe (T.Text, [Cookie]))
+doSndRequest :: Manager -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Either SomeException (T.Text, [Cookie]))
 doSndRequest manager _afPfm viewState cookie redirects = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
@@ -175,12 +175,12 @@ doSndRequest manager _afPfm viewState cookie redirects = do
   case response of
    Left ex -> do
      putStrLn $ show ex
-     return Nothing
+     return $ Left ex
    Right response -> do
      putStrLn "Processing..."
      let result = procSndResponse response
      putStrLn "Processed."
-     return result
+     return $ maybeToEither "A processing error occurred." result
 
 procSndResponse :: (T.Text, [Cookie]) -> Maybe (T.Text, [Cookie])
 procSndResponse response = do
@@ -190,7 +190,7 @@ procSndResponse response = do
   return (_afPfm, cookieList)
 
 
-doFstRequest :: Manager -> IO (Maybe (T.Text, T.Text, [Cookie]))
+doFstRequest :: Manager -> IO (Either SomeException (T.Text, T.Text, [Cookie]))
 doFstRequest manager = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
@@ -202,12 +202,12 @@ doFstRequest manager = do
   case response of
    Left ex -> do
      putStrLn $ show ex
-     return Nothing
+     return $ Left $ ex --Nothing
    Right response -> do
      putStrLn "Processing..."
      let result = procFstResponse response
      putStrLn "Processed."
-     return result
+     return $ maybeToEither (throw PatternMatchFail) result
 
 procFstResponse :: (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, [Cookie])
 procFstResponse response = do

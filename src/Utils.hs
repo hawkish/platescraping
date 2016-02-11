@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getOpenTags, dequote, extractText, getTextAfter, getTagTexts, getTextsAfter, getTextAfterAt, deleteEveryNth, unescapeJSONText) where
+module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getOpenTags, dequote, extractText, getTextAfter, getTagTexts, getTextsAfter, getTextAfterAt, deleteEveryNth, unescapeJSONText, maybeToEither) where
 
 import Data.List.Split
 import Data.List (elemIndex, elemIndices) 
@@ -105,3 +105,6 @@ Logically the text is split into a list at the old substring. The list is then i
 --}
 replaceText :: T.Text -> T.Text -> T.Text -> T.Text
 replaceText old new a = T.intercalate new $ T.splitOn old a
+
+maybeToEither :: a1 -> Maybe a -> Either a1 a
+maybeToEither leftValue = maybe (Left leftValue) Right 
