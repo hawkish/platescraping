@@ -207,7 +207,7 @@ doFstRequest manager = do
      putStrLn "Processing..."
      let result = procFstResponse response
      putStrLn "Processed."
-     return $ maybeToEither (throw PatternMatchFail) result
+     return $ maybeToEither (throw $ PatternMatchFail "error") result
 
 procFstResponse :: (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, [Cookie])
 procFstResponse response = do
