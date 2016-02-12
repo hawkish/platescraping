@@ -15,6 +15,7 @@ import qualified OpenSSL.Session as SSL
 
 import Network.HTTP.Types.Header
 import Control.Exception
+import Control.Error.Util
 import Data.List
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text as T
