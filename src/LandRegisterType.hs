@@ -8,7 +8,6 @@ module LandRegisterType (initCreditor, initDebtor, initMotorregister, initDocume
 import Utils (getElementAt, dequote, getTagTexts, getTextAfter, getTextsAfter)
 import Data.Maybe
 import qualified Data.Text as T
---import Control.Lens
 import GHC.Generics
 import Data.Aeson (ToJSON)
 
@@ -48,15 +47,11 @@ instance ToJSON Document
 instance ToJSON AdditionalText
 instance ToJSON Creditor
 instance ToJSON Debtor
---makeLenses ''LandRegister
---makeLenses ''Motorregister
---makeLenses ''Document
---makeLenses ''Creditor
---makeLenses ''Debtor
---makeLenses ''AdditionalText
 
+initLandRegister :: Maybe T.Text -> T.Text -> LandRegister
 initLandRegister vin a = MkLandRegister { _motorregister = initMotorregister vin a, _document = initDocument a, _creditor = initCreditor a, _debtor = initDebtor a, _additionalText = initAdditionalText a }
 
+initCreditor :: T.Text -> Creditor
 initCreditor a = MkCreditor { _cname = getCreditorName a
                             , _cvr = getTextAfter (T.pack "CVR:") a }
 
@@ -66,6 +61,7 @@ getCreditorName a = do
   name <- getElementAt names 0
   return $ fromJust name
 
+initDebtor ∷ T.Text -> Debtor
 initDebtor a = MkDebtor { _dname = getDebtorName a
                         , _cpr = getTextAfter (T.pack "CPR:") a }
 
@@ -75,17 +71,20 @@ getDebtorName a = do
   name <- getElementAt names 1
   return $ fromJust name
 
+initDocument :: T.Text -> Document
 initDocument a = MkDocument { _date = getTextAfter (T.pack "Dato/løbenummer:") a
                             , _mortgage = getTextAfter (T.pack "Prioritet:") a
                             , _documentType = getTextAfter (T.pack "Dokument type:") a
                             , _principal = getTextAfter (T.pack "Hovedstol:") a
                             , _rateOfInterest = getTextAfter (T.pack "Rentesats:") a }
 
+initMotorregister :: Maybe T.Text -> T.Text -> Motorregister
 initMotorregister vin a = MkMotorregister { _brand = getTextAfter (T.pack "Mærke:") a
                                           , _year = getTextAfter (T.pack "Årgang:") a
                                           , _license = getTextAfter (T.pack "Registreringsnummer:") a
                                           , _vin = vin }
 
+initAdditionalText :: T.Text -> AdditionalText
 initAdditionalText a = MkAdditionalText { _text = getAdditionalText a }
 
 getAdditionalText :: T.Text -> [Maybe T.Text]

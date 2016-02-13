@@ -15,7 +15,8 @@ executable licenseplate
                  , connection==0.2.5
                  , http-client==0.4.15
                  , http-types==0.8.6
-                 , lens==4.11
+                 --, lens==4.11
+                 , errors==2.1.2
                  , mtl==2.2.1
                  , multipart==0.1.2
                  , network==2.6.0.2

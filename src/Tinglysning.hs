@@ -22,12 +22,13 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
-import Utils (getParameterAt, getElementAt, maybeToEither)
+import Utils (getParameterAt, getElementAt)
 import LandRegisterType (initLandRegister, LandRegister)
 import Control.Monad.Trans
 import Data.Maybe
+import ErrorType (ProcessingResponseError(..))
 
-getLandRegister :: T.Text -> IO (Maybe LandRegister)
+getLandRegister :: T.Text -> IO (Either SomeException LandRegister)
 getLandRegister vin = withOpenSSL $ do
   manager <- newManager $ opensslManagerSettings SSL.context
 --getLandRegister vin = do
@@ -37,18 +38,18 @@ getLandRegister vin = withOpenSSL $ do
   case a1 of
     Left ex -> do
       closeManager manager
-      return Nothing
-    Right a1 -> do
-      let (_afPfm, viewState, cookieList) = a1
+      return $ Left ex
+    Right val1 -> do
+      let (_afPfm, viewState, cookieList) = val1
       putStrLn "Doing second request..."
       a2 <- doSndRequest manager _afPfm viewState cookieList 1 
       case a2 of
         Left ex -> do
           closeManager manager
-          return Nothing
-        Right a2 -> do
+          return $ Left ex
+        Right val2 -> do
           --putStrLn "Second processing done."
-          let (_afPfm2, cookieList) = a2
+          let (_afPfm2, cookieList) = val2
           -- Maintaining viewState as is.
           putStrLn "Doing third request..."
           -- a3 is a redirect. 
@@ -56,20 +57,20 @@ getLandRegister vin = withOpenSSL $ do
           case a3 of
             Left ex -> do
               closeManager manager
-              return Nothing
-            Right a3 -> do
-              let (viewState, rangeStart, listItemValue, cookieList) = a3
+              return $ Left ex
+            Right val3 -> do
+              let (viewState, rangeStart, listItemValue, cookieList) = val3
               putStrLn "Doing fourth request..."
               a4 <- doFrthRequest manager _afPfm2 rangeStart viewState listItemValue cookieList 1
               -- a4 is also a redirect. 
               case a4 of
                 Left ex -> do
                   closeManager manager
-                  return Nothing
-                Right a4 -> do
+                  return $ Left ex
+                Right val4 -> do
                   closeManager manager
-                  let (html, cookieList) = a4
-                  return $ Just $ initLandRegister (Just vin) html
+                  let (html, cookieList) = val4
+                  return $ Right $ initLandRegister (Just vin) html
 
 
 doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Either SomeException (T.Text, [Cookie]))
@@ -134,7 +135,7 @@ doTrdRequest manager vin _afPfm viewState cookie redirects = do
      putStrLn "Processing..."
      let result = procTrdResponse response
      putStrLn "Processed."
-     return $ maybeToEither "A processing error occurred." result
+     return $ note (throw $ ParseError "Third processing failed.") result
 
 procTrdResponse ::  (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, T.Text, [Cookie])
 procTrdResponse response = do
@@ -181,7 +182,7 @@ doSndRequest manager _afPfm viewState cookie redirects = do
      putStrLn "Processing..."
      let result = procSndResponse response
      putStrLn "Processed."
-     return $ maybeToEither "A processing error occurred." result
+     return $ note (throw $ ParseError "Second processing failed.") result
 
 procSndResponse :: (T.Text, [Cookie]) -> Maybe (T.Text, [Cookie])
 procSndResponse response = do
@@ -208,7 +209,7 @@ doFstRequest manager = do
      putStrLn "Processing..."
      let result = procFstResponse response
      putStrLn "Processed."
-     return $ maybeToEither (throw $ PatternMatchFail "error") result
+     return $ note (throw $ ParseError "First processing failed.") result
 
 procFstResponse :: (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, [Cookie])
 procFstResponse response = do

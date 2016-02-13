@@ -9,7 +9,6 @@ import Utils (dequote, extractText, getTextAfterAt, deleteEveryNth)
 import Text.HTML.TagSoup (parseTags, isTagText, isTagOpen, Tag, (~/=))
 import qualified Text.HTML.TagSoup as TS
 import qualified Data.Text as T
---import Control.Lens
 import GHC.Generics
 import Data.List
 import Data.Aeson (ToJSON)
@@ -54,17 +53,12 @@ instance ToJSON SurveyorDetails
 instance ToJSON ErrorOverview
 instance ToJSON ServiceRemarks
 
---makeLenses ''Surveyor
---makeLenses ''Vehicle
---makeLenses ''SurveyorDetails
---makeLenses ''ErrorOverview
---makeLenses ''ServiceRemarks
---makeLenses ''SurveyorRapport
-
+initSurveyor :: T.Text -> Surveyor
 initSurveyor a = MkSurveyor { _surveyorName = getTextAfterAt (T.pack "Virksomhed") 2 a
                             , _cvr = getTextAfterAt (T.pack "CVR") 2 a
                             , _place = getTextAfterAt (T.pack "Sted") 2 a }
 
+initSurveyorDetails :: T.Text -> SurveyorDetails
 initSurveyorDetails a = MkSurveyorDetails { _surveyorKind = getTextAfterAt (T.pack "Synsart") 2 a
                                           , _surveyorType = getTextAfterAt (T.pack "Synstype") 2 a
                                           , _surveyorDate = getTextAfterAt (T.pack "Synsdato") 2 a
@@ -73,6 +67,7 @@ initSurveyorDetails a = MkSurveyorDetails { _surveyorKind = getTextAfterAt (T.pa
                                           , _surveyorResult = getTextAfterAt (T.pack "Synsresultat") 2 a
                                           , _surveyorDeadline = getTextAfterAt (T.pack "Sidste frist for omsyn/genfremstilling") 2 a }
 
+initVehicle :: T.Text -> Vehicle
 initVehicle a = MkVehicle { _brand = getTextAfterAt (T.pack "Mærke") 2 a
                           , _model = getTextAfterAt (T.pack "Model") 2 a
                           , _vehicleKind = getTextAfterAt (T.pack "Køretøjsart") 2 a
@@ -80,6 +75,7 @@ initVehicle a = MkVehicle { _brand = getTextAfterAt (T.pack "Mærke") 2 a
                           , _vin = getTextAfterAt (T.pack "Stelnr.") 2 a
                           , _vehicleID = getTextAfterAt (T.pack "Køretøjs-ID") 2 a }
 
+initErrorOverview :: T.Text -> ErrorOverview
 initErrorOverview a = MkErrorOverview { _errorTexts = getErrorTexts a }
 
 getErrorTexts :: T.Text -> [[T.Text]]
@@ -99,13 +95,16 @@ getTitleAttribs = map (TS.fromAttrib ("title" :: T.Text))
 getClassErrorList :: [Tag T.Text] -> [Tag T.Text]
 getClassErrorList = takeWhile (~/= ("<div class=clear>" :: String)) . dropWhile (~/= ("<div class=errorList>" :: String))
 
+initServiceRemarks :: T.Text -> ServiceRemarks
 initServiceRemarks a = MkServiceRemarks {_remarks = getServiceRemarks a }
 
 getServiceRemarks :: T.Text -> [T.Text]
 getServiceRemarks = dequote . map extractText . (filter isTagText) . getClassServiceRemark . parseTags
 
+getClassServiceRemark :: [Tag T.Text] -> [Tag T.Text]
 getClassServiceRemark = takeWhile (~/= ("<div class=clear>" :: String)) . dropWhile (~/= ("<div class=serviceRemarkBullet>" :: String))
 
+initSurveyorRapport :: T.Text -> SurveyorRapport
 initSurveyorRapport a = MkSurveyorRapport { _surveyor = initSurveyor a
                                         , _vehicle = initVehicle a
                                         , _surveyorDetails = initSurveyorDetails a

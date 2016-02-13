@@ -9,11 +9,9 @@ import qualified Data.Text.Lazy as TL
 import Control.Monad.Trans
 import Network.HTTP.Types
 import Web.Scotty
-import Data.Aeson (ToJSON, encode)
-import ErrorType (Error, initError)
---import Utils (unescapeJSONText)
---import LandRegisterType (LandRegister, Motorregister, Document, Creditor, Debtor, AdditionalText)
---import SurveyorRapportType (SurveyorRapport, Surveyor, Vehicle, SurveyorDetails, ErrorOverview, ServiceRemarks)
+import Data.Aeson (encode)
+import ErrorType (initError)
+import Control.Exception
 
 main :: IO ()
 main = scotty 3000 $ do
@@ -26,10 +24,10 @@ main = scotty 3000 $ do
     rn <- param "rn"
     result <- liftIO $ searchUsingReg rn
     case result of
-      Nothing -> do
+      Left ex -> do
         status status404
-        json $ errorJSON "404" "Søgningen gav intet resultat."
-      Just result -> json result
+        json $ errorJSON "404" $ show ex
+      Right val -> json val
 
   get "/1.0/vin/:vin" $ do
     vin <- param "vin"
@@ -37,10 +35,10 @@ main = scotty 3000 $ do
       then do 
       result <- liftIO $ searchUsingVin vin
       case result of
-        Nothing -> do
+        Left ex -> do
           status status404
-          json $ errorJSON "404" "Søgningen gav intet resultat."
-        Just result -> json result 
+          json $ errorJSON "404" $ show ex
+        Right val -> json val
       else do
       status status404
       json $ errorJSON "404" "Ikke et gyldigt stel nummer."
@@ -50,21 +48,22 @@ main = scotty 3000 $ do
     status status404
     json $ errorJSON "404" "Kan ikke finde servicen."
 
+errorJSON :: String -> String -> TL.Text
 errorJSON a b = TLE.decodeUtf8 $ encode $ initError (T.pack a) (T.pack b)
 
-searchUsingReg :: String -> IO (Maybe T.Text)
+searchUsingReg :: String -> IO (Either SomeException T.Text)
 searchUsingReg reg = do
   surveyorRapports <- getSurveyorRapports (T.pack reg)
-  if surveyorRapports == []
-    then return Nothing
-    else return . Just . TL.toStrict . TLE.decodeUtf8 $ encode surveyorRapports
+  case surveyorRapports of
+    Left ex -> return $ Left ex
+    Right val -> return . Right . TL.toStrict . TLE.decodeUtf8 $ encode val
   
-searchUsingVin :: String -> IO (Maybe T.Text)
+searchUsingVin :: String -> IO (Either SomeException T.Text)
 searchUsingVin vin = do
   landRegister <- getLandRegister (T.pack vin)
   case landRegister of
-    Nothing -> return Nothing
-    Just landRegister -> return . Just . TL.toStrict . TLE.decodeUtf8 $ encode landRegister
+    Left ex -> return $ Left ex 
+    Right val -> return . Right . TL.toStrict . TLE.decodeUtf8 $ encode val
 
 -- The rules in this wikipedia article is used.
 -- https://en.wikipedia.org/wiki/Vehicle_identification_number
