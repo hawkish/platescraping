@@ -53,14 +53,14 @@ errorJSON a b = TLE.decodeUtf8 $ encode $ initError (T.pack a) (T.pack b)
 
 searchUsingReg :: String -> IO (Either SomeException T.Text)
 searchUsingReg reg = do
-  surveyorRapports <- getSurveyorRapports (T.pack reg)
+  surveyorRapports <- try $ getSurveyorRapports (T.pack reg)
   case surveyorRapports of
     Left ex -> return $ Left ex
     Right val -> return . Right . TL.toStrict . TLE.decodeUtf8 $ encode val
   
 searchUsingVin :: String -> IO (Either SomeException T.Text)
 searchUsingVin vin = do
-  landRegister <- getLandRegister (T.pack vin)
+  landRegister <- try $ getLandRegister (T.pack vin)
   case landRegister of
     Left ex -> return $ Left ex 
     Right val -> return . Right . TL.toStrict . TLE.decodeUtf8 $ encode val

@@ -14,8 +14,7 @@ import qualified OpenSSL.Session as SSL
 --import Network.HTTP.Client.TLS
 
 import Network.HTTP.Types.Header
-import Control.Exception
-import Control.Error.Util
+
 import Data.List
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text as T
@@ -26,54 +25,52 @@ import Utils (getParameterAt, getElementAt)
 import LandRegisterType (initLandRegister, LandRegister)
 import Control.Monad.Trans
 import Data.Maybe
-import ErrorType (ProcessingResponseError(..))
 
-getLandRegister :: T.Text -> IO (Either SomeException LandRegister)
+
+getLandRegister :: T.Text -> IO (Maybe LandRegister)
 getLandRegister vin = withOpenSSL $ do
   manager <- newManager $ opensslManagerSettings SSL.context
 --getLandRegister vin = do
   --manager <- newManager tlsManagerSettings
   putStrLn "Doing first request..."
-  a1 <- doFstRequest manager
+  a <- doFstRequest manager
+  let a1 = procFstResponse a
   case a1 of
-    Left ex -> do
+    Nothing -> do
       closeManager manager
-      return $ Left ex
-    Right val1 -> do
+      return Nothing
+    Just val1 -> do
       let (_afPfm, viewState, cookieList) = val1
       putStrLn "Doing second request..."
-      a2 <- doSndRequest manager _afPfm viewState cookieList 1 
-      case a2 of
-        Left ex -> do
+      a2 <- doSndRequest manager _afPfm viewState cookieList 1
+      let a3 = procSndResponse a2
+      case a3 of
+        Nothing -> do
           closeManager manager
-          return $ Left ex
-        Right val2 -> do
+          return Nothing
+        Just val2 -> do
           --putStrLn "Second processing done."
           let (_afPfm2, cookieList) = val2
           -- Maintaining viewState as is.
           putStrLn "Doing third request..."
           -- a3 is a redirect. 
-          a3 <- doTrdRequest manager vin _afPfm2 viewState cookieList 1
-          case a3 of
-            Left ex -> do
+          a4 <- doTrdRequest manager vin _afPfm2 viewState cookieList 1
+          let a5 = procTrdResponse a4
+          case a5 of
+            Nothing -> do
               closeManager manager
-              return $ Left ex
-            Right val3 -> do
+              return Nothing
+            Just val3 -> do
               let (viewState, rangeStart, listItemValue, cookieList) = val3
               putStrLn "Doing fourth request..."
-              a4 <- doFrthRequest manager _afPfm2 rangeStart viewState listItemValue cookieList 1
+              a6 <- doFrthRequest manager _afPfm2 rangeStart viewState listItemValue cookieList 1
               -- a4 is also a redirect. 
-              case a4 of
-                Left ex -> do
-                  closeManager manager
-                  return $ Left ex
-                Right val4 -> do
-                  closeManager manager
-                  let (html, cookieList) = val4
-                  return $ Right $ initLandRegister (Just vin) html
+              closeManager manager
+              let (html, cookieList) = a6
+              return $ Just $ initLandRegister (Just vin) html
 
 
-doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Either SomeException (T.Text, [Cookie]))
+doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> Int -> IO (T.Text, [Cookie])
 doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie redirects = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
   let referer = url `T.append` (T.pack "?") `T.append` _afPfm
@@ -94,15 +91,9 @@ doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie redirects
         ("state", ""),
         ("value", ""),
         ("listItem", TE.encodeUtf8(listItemValue))]
-  response <- try $ doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (Either SomeException (T.Text, [Cookie]))
-  case response of
-   Left ex -> do
-     putStrLn $ show ex
-     return $ Left ex
-   Right response -> do
-     return $ Right response
+  doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (T.Text, [Cookie])
 
-doTrdRequest :: Manager -> T.Text -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Either SomeException (T.Text, T.Text, T.Text, [Cookie]))
+doTrdRequest :: Manager -> T.Text -> T.Text -> T.Text -> [Cookie] -> Int -> IO (T.Text, [Cookie])
 doTrdRequest manager vin _afPfm viewState cookie redirects = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
@@ -126,16 +117,7 @@ doTrdRequest manager vin _afPfm viewState cookie redirects = do
         ("_noJavaScript", "false"),
         ("javax.faces.ViewState", TE.encodeUtf8(viewState)),
         ("source","content:center:bilbogen:j_id150")]
-  response <- try $ doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (Either SomeException (T.Text, [Cookie]))
-  case response of
-   Left ex -> do
-     putStrLn $ show ex
-     return $ Left ex
-   Right response -> do
-     putStrLn "Processing..."
-     let result = procTrdResponse response
-     putStrLn "Processed."
-     return $ note (throw $ ParseError "Third processing failed.") result
+  doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (T.Text, [Cookie])
 
 procTrdResponse ::  (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, T.Text, [Cookie])
 procTrdResponse response = do
@@ -146,7 +128,7 @@ procTrdResponse response = do
   listItemValue <- getListItemValue html
   return (viewState, rangeStart, listItemValue, cookieList)
 
-doSndRequest :: Manager -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Either SomeException (T.Text, [Cookie]))
+doSndRequest :: Manager -> T.Text -> T.Text -> [Cookie] -> Int -> IO (T.Text, [Cookie])
 doSndRequest manager _afPfm viewState cookie redirects = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
@@ -173,16 +155,7 @@ doSndRequest manager _afPfm viewState cookie redirects = do
         ("source","content:center:bilbogen:stelnrOption"),
         ("event","autosub"),
         ("partial","true")]
-  response <- try $ doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (Either SomeException (T.Text, [Cookie]))
-  case response of
-   Left ex -> do
-     putStrLn $ show ex
-     return $ Left ex
-   Right response -> do
-     putStrLn "Processing..."
-     let result = procSndResponse response
-     putStrLn "Processed."
-     return $ note (throw $ ParseError "Second processing failed.") result
+  doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (T.Text, [Cookie])
 
 procSndResponse :: (T.Text, [Cookie]) -> Maybe (T.Text, [Cookie])
 procSndResponse response = do
@@ -192,7 +165,7 @@ procSndResponse response = do
   return (_afPfm, cookieList)
 
 
-doFstRequest :: Manager -> IO (Either SomeException (T.Text, T.Text, [Cookie]))
+doFstRequest :: Manager -> IO (T.Text, [Cookie])
 doFstRequest manager = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
@@ -200,16 +173,7 @@ doFstRequest manager = do
           ("Accept", "text/html,application/xhtml+xml;application/xml;q=0.9,*/*;q=0.8"),
           ("Accept-Language", "en-GB,en;q=0.5"),
           ("Connection", "keep-alive")]
-  response <- try $ doGetRequest manager url requestHeaders :: IO (Either SomeException (T.Text, [Cookie]))
-  case response of
-   Left ex -> do
-     putStrLn $ show ex
-     return $ Left $ ex --Nothing
-   Right response -> do
-     putStrLn "Processing..."
-     let result = procFstResponse response
-     putStrLn "Processed."
-     return $ note (throw $ ParseError "First processing failed.") result
+  doGetRequest manager url requestHeaders :: IO (T.Text, [Cookie])
 
 procFstResponse :: (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, [Cookie])
 procFstResponse response = do
