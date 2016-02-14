@@ -26,7 +26,6 @@ import LandRegisterType (initLandRegister, LandRegister)
 import Control.Monad.Trans
 import Data.Maybe
 
-
 getLandRegister :: T.Text -> IO (Maybe LandRegister)
 getLandRegister vin = withOpenSSL $ do
   manager <- newManager $ opensslManagerSettings SSL.context
@@ -40,9 +39,9 @@ getLandRegister vin = withOpenSSL $ do
       closeManager manager
       return Nothing
     Just val1 -> do
-      let (_afPfm, viewState, cookieList) = val1
+      let (_afPfm, viewState1, cookieList1) = val1
       putStrLn "Doing second request..."
-      a2 <- doSndRequest manager _afPfm viewState cookieList 1
+      a2 <- doSndRequest manager _afPfm viewState1 cookieList1 1
       let a3 = procSndResponse a2
       case a3 of
         Nothing -> do
@@ -50,23 +49,23 @@ getLandRegister vin = withOpenSSL $ do
           return Nothing
         Just val2 -> do
           --putStrLn "Second processing done."
-          let (_afPfm2, cookieList) = val2
+          let (_afPfm2, cookieList2) = val2
           -- Maintaining viewState as is.
           putStrLn "Doing third request..."
           -- a3 is a redirect. 
-          a4 <- doTrdRequest manager vin _afPfm2 viewState cookieList 1
+          a4 <- doTrdRequest manager vin _afPfm2 viewState1 cookieList2 1
           let a5 = procTrdResponse a4
           case a5 of
             Nothing -> do
               closeManager manager
               return Nothing
             Just val3 -> do
-              let (viewState, rangeStart, listItemValue, cookieList) = val3
+              let (viewState2, rangeStart, listItemValue, cookieList3) = val3
               putStrLn "Doing fourth request..."
-              a6 <- doFrthRequest manager _afPfm2 rangeStart viewState listItemValue cookieList 1
+              a6 <- doFrthRequest manager _afPfm2 rangeStart viewState2 listItemValue cookieList3 1
               -- a4 is also a redirect. 
               closeManager manager
-              let (html, cookieList) = a6
+              let (html, cookieList4) = a6
               return $ Just $ initLandRegister (Just vin) html
 
 
