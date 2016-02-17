@@ -13,20 +13,18 @@ executable licenseplate
                  , cgi==3001.2.2.2
                  , conduit==1.2.4.2
                  , connection==0.2.5
+                 , errors==2.1.2
                  , http-client==0.4.15
                  , http-types==0.8.6
-                 --, lens==4.11
-                 , errors==2.1.2
                  , mtl==2.2.1
                  , multipart==0.1.2
                  , network==2.6.0.2
-                 --, parsec >= 3.1.4
-                 , scotty==0.10.1
+                 , scotty>=0.10.1
                  , split==0.1.2.3
                  , tagsoup==0.13.3
                  , text==1.2.1.1
                  , time==1.5.0.1
-                 , transformers==0.4.2.0
+                 , transformers>=0.2.2
 -- Linux
                  , HsOpenSSL==0.11.1.1
                  , http-client-openssl==0.2.0.0

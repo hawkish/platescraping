@@ -21,10 +21,43 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
-import Utils (getParameterAt, getElementAt)
+import Utils (getParameterAt, getElementAt, fst3, snd3, thd3)
 import LandRegisterType (initLandRegister, LandRegister)
 import Control.Monad.Trans
+-- import Control.Monad.Trans.Maybe
+-- import Control.Monad
 import Data.Maybe
+
+
+
+
+--getResult vin = do
+--  mResult <- runMaybeT $ getLandRegister2 vin
+--  return mResult
+{--
+fancyEnvInfo :: MaybeT IO (Maybe String)
+fancyEnvInfo = do
+  editor <- lift (lookupEnv "EDITOR")
+  lang <- lift (lookupEnv "LANG")
+  term <- lift (lookupEnv "TERM")
+  --let result = (editor, lang, term)
+  --lift (putStrLn ("Got result " ++ (show result)))
+  return $ maybe editor
+--}
+--  maybe mzero pure <=< lift . System.Environment.lookupEnv
+
+--getLandRegister2 :: T.Text -> IO (Maybe LandRegister)
+getLandRegister2 vin manager = do
+--getLandRegister vin = do
+  --manager <- newManager tlsManagerSettings
+  putStrLn "Doing first request..."
+  a1 <- doFstRequest manager
+  --let (_afPfm, viewState1, cookieList1) = a1
+  --putStrLn "Doing second request..."
+  --a2 = fmap doSndRequest a1
+  --a2 <- doSndRequest manager _afPfm viewState1 cookieList1 1
+  return a1
+
 
 getLandRegister :: T.Text -> IO (Maybe LandRegister)
 getLandRegister vin = withOpenSSL $ do
@@ -40,7 +73,7 @@ getLandRegister vin = withOpenSSL $ do
     Just val1 -> do
       let (_afPfm, viewState1, cookieList1) = val1
       putStrLn "Doing second request..."
-      a2 <- doSndRequest manager _afPfm viewState1 cookieList1 1
+      a2 <- doSndRequest manager _afPfm viewState1 cookieList1 
       case a2 of
         Nothing -> do
           closeManager manager
@@ -51,7 +84,7 @@ getLandRegister vin = withOpenSSL $ do
           -- Maintaining viewState as is.
           putStrLn "Doing third request..."
           -- a3 is a redirect. 
-          a3 <- doTrdRequest manager vin _afPfm2 viewState1 cookieList2 1
+          a3 <- doTrdRequest manager vin _afPfm2 viewState1 cookieList2
           case a3 of
             Nothing -> do
               closeManager manager
@@ -59,15 +92,16 @@ getLandRegister vin = withOpenSSL $ do
             Just val3 -> do
               let (viewState2, rangeStart, listItemValue, cookieList3) = val3
               putStrLn "Doing fourth request..."
-              a4 <- doFrthRequest manager _afPfm2 rangeStart viewState2 listItemValue cookieList3 1
+              a4 <- doFrthRequest manager _afPfm2 rangeStart viewState2 listItemValue cookieList3
               -- a4 is also a redirect. 
               closeManager manager
               let (html, cookieList4) = a4
               return $ Just $ initLandRegister (Just vin) html
 
 
-doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> Int -> IO (T.Text, [Cookie])
-doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie redirects = do
+doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (T.Text, [Cookie])
+doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie = do
+  let redirects = 1
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
   let referer = url `T.append` (T.pack "?") `T.append` _afPfm
   let requestHeaders = [
@@ -89,9 +123,10 @@ doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie redirects
         ("listItem", TE.encodeUtf8(listItemValue))]
   doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (T.Text, [Cookie])
 
-doTrdRequest :: Manager -> T.Text -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Maybe (T.Text, T.Text, T.Text, [Cookie]))
-doTrdRequest manager vin _afPfm viewState cookie redirects = do
+doTrdRequest :: Manager -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, T.Text, T.Text, [Cookie]))
+doTrdRequest manager vin _afPfm viewState cookie = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
+  let redirects = 1
   let requestHeaders = [
           ("Host","www.tinglysning.dk"),
           ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
@@ -125,8 +160,9 @@ procTrdResponse response = do
   listItemValue <- getListItemValue html
   return (viewState, rangeStart, listItemValue, cookieList)
 
-doSndRequest :: Manager -> T.Text -> T.Text -> [Cookie] -> Int -> IO (Maybe (T.Text, [Cookie]))
-doSndRequest manager _afPfm viewState cookie redirects = do
+doSndRequest :: Manager -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
+doSndRequest manager _afPfm viewState cookie = do
+  let redirects = 1
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let requestHeaders = [
           ("Host","www.tinglysning.dk"),

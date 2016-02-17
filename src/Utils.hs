@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getOpenTags, dequote, extractText, getTextAfter, getTagTexts, getTextsAfter, getTextAfterAt, deleteEveryNth, unescapeJSONText) where
+module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getOpenTags, dequote, extractText, getTextAfter, getTagTexts, getTextsAfter, getTextAfterAt, deleteEveryNth, unescapeJSONText, fst3, snd3, thd3) where
 
 import Data.List.Split
 import Data.List (elemIndex, elemIndices) 
@@ -102,4 +102,17 @@ Logically the text is split into a list at the old substring. The list is then i
 --}
 replaceText :: T.Text -> T.Text -> T.Text -> T.Text
 replaceText old new a = T.intercalate new $ T.splitOn old a
+
+-- | Take the first item out of a 3 element tuple
+fst3 :: (a,b,c) -> a
+fst3 (a,b,c) = a
+
+-- | Take the second item out of a 3 element tuple
+snd3 :: (a,b,c) -> b
+snd3 (a,b,c) = b
+
+-- | Take the third item out of a 3 element tuple
+thd3 :: (a,b,c) -> c
+thd3 (a,b,c) = c
+
 
