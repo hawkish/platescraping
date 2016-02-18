@@ -7,11 +7,11 @@ import Text.HTML.TagSoup (parseTags, (~==), fromAttrib, isTagOpenName)
 import Network.HTTP.Client
 
 --Linux
-import Network.HTTP.Client.OpenSSL
-import qualified OpenSSL.Session as SSL
+--import Network.HTTP.Client.OpenSSL
+--import qualified OpenSSL.Session as SSL
 
 --OSX
---import Network.HTTP.Client.TLS
+import Network.HTTP.Client.TLS
 
 import Network.HTTP.Types.Header
 
@@ -47,23 +47,26 @@ fancyEnvInfo = do
 --  maybe mzero pure <=< lift . System.Environment.lookupEnv
 
 --getLandRegister2 :: T.Text -> IO (Maybe LandRegister)
-getLandRegister2 vin manager = do
+getLandRegister2 vin = do
 --getLandRegister vin = do
   --manager <- newManager tlsManagerSettings
+  manager <- newManager tlsManagerSettings
   putStrLn "Doing first request..."
   a1 <- doFstRequest manager
-  --let (_afPfm, viewState1, cookieList1) = a1
-  --putStrLn "Doing second request..."
-  --a2 = fmap doSndRequest a1
-  --a2 <- doSndRequest manager _afPfm viewState1 cookieList1 1
-  return a1
-
+  let Just (_afPfm, viewState1, cookieList1) = a1
+  a2 <- doSndRequest manager _afPfm viewState1 cookieList1
+  let Just (_afPfm2, cookieList2) = a2
+  a3 <- doTrdRequest manager vin _afPfm2 viewState1 cookieList2
+  let Just (viewState2, rangeStart, listItemValue, cookieList3) = a3
+  a4 <- doFrthRequest manager _afPfm2 rangeStart viewState2 listItemValue cookieList3
+  let (html, cookieList4) = a4
+  return $ Just $ initLandRegister (Just vin) html
 
 getLandRegister :: T.Text -> IO (Maybe LandRegister)
-getLandRegister vin = withOpenSSL $ do
-  manager <- newManager $ opensslManagerSettings SSL.context
---getLandRegister vin = do
-  --manager <- newManager tlsManagerSettings
+--getLandRegister vin = withOpenSSL $ do
+  --manager <- newManager $ opensslManagerSettings SSL.context
+getLandRegister vin = do
+  manager <- newManager tlsManagerSettings
   putStrLn "Doing first request..."
   a1 <- doFstRequest manager
   case a1 of
