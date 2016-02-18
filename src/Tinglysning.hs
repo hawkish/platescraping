@@ -7,11 +7,11 @@ import Text.HTML.TagSoup (parseTags, (~==), fromAttrib, isTagOpenName)
 import Network.HTTP.Client
 
 --Linux
---import Network.HTTP.Client.OpenSSL
---import qualified OpenSSL.Session as SSL
+import Network.HTTP.Client.OpenSSL
+import qualified OpenSSL.Session as SSL
 
 --OSX
-import Network.HTTP.Client.TLS
+--import Network.HTTP.Client.TLS
 
 import Network.HTTP.Types.Header
 
@@ -27,61 +27,25 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 import Data.Maybe
 
--- Using the MaybeT monad transformer
+-- Using the MaybeT monad transformer to handle IO(Maybe a)
 -- https://hackage.haskell.org/package/transformers-0.5.1.0/docs/Control-Monad-Trans-Maybe.html
 getLandRegister :: T.Text -> IO (Maybe LandRegister)
-getLandRegister vin = do
 --getLandRegister vin = do
   --manager <- newManager tlsManagerSettings
-  manager <- newManager tlsManagerSettings
+getLandRegister vin = withOpenSSL $ do
+  manager <- newManager $ opensslManagerSettings SSL.context
   putStrLn "Doing requests..."
   runMaybeT $ do
+    -- Transforming Maybe to MaybeT and drawing values from IO
+    -- MaybeT :: m (Maybe a) -> MaybeT m a
     (_afPfm, viewState1, cookieList1) <- MaybeT $ doFstRequest manager
     (_afPfm2, cookieList2) <- MaybeT $ doSndRequest manager _afPfm viewState1 cookieList1
     (viewState2, rangeStart, listItemValue, cookieList3) <- MaybeT $ doTrdRequest manager vin _afPfm2 viewState1 cookieList2
     (html, cookieList4) <- MaybeT $ doFrthRequest manager _afPfm2 rangeStart viewState2 listItemValue cookieList3
+    -- Return to IO monad and use runMaybe to transform to maybe.
+    -- return :: Monad m => a -> m a
+    -- runMaybeT :: MaybeT m a -> m (Maybe a)
     return $ initLandRegister (Just vin) html
-
--- Stairs model
-getLandRegister2 :: T.Text -> IO (Maybe LandRegister)
---getLandRegister vin = withOpenSSL $ do
-  --manager <- newManager $ opensslManagerSettings SSL.context
-getLandRegister2 vin = do
-  manager <- newManager tlsManagerSettings
-  putStrLn "Doing first request..."
-  a1 <- doFstRequest manager
-  case a1 of
-    Nothing -> do
-      closeManager manager
-      return Nothing
-    Just val1 -> do
-      let (_afPfm, viewState1, cookieList1) = val1
-      putStrLn "Doing second request..."
-      a2 <- doSndRequest manager _afPfm viewState1 cookieList1 
-      case a2 of
-        Nothing -> do
-          closeManager manager
-          return Nothing
-        Just val2 -> do
-          --putStrLn "Second processing done."
-          let (_afPfm2, cookieList2) = val2
-          -- Maintaining viewState as is.
-          putStrLn "Doing third request..."
-          -- a3 is a redirect. 
-          a3 <- doTrdRequest manager vin _afPfm2 viewState1 cookieList2
-          case a3 of
-            Nothing -> do
-              closeManager manager
-              return Nothing
-            Just val3 -> do
-              let (viewState2, rangeStart, listItemValue, cookieList3) = val3
-              putStrLn "Doing fourth request..."
-              a4 <- doFrthRequest manager _afPfm2 rangeStart viewState2 listItemValue cookieList3
-              -- a4 is also a redirect. 
-              closeManager manager
-              let Just (html, cookieList4) = a4
-              return $ Just $ initLandRegister (Just vin) html
---}
 
 doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
 doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie = do
