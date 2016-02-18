@@ -21,51 +21,32 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
-import Utils (getParameterAt, getElementAt, fst3, snd3, thd3)
+import Utils (getParameterAt, getElementAt)
 import LandRegisterType (initLandRegister, LandRegister)
 import Control.Monad.Trans
--- import Control.Monad.Trans.Maybe
--- import Control.Monad
+import Control.Monad.Trans.Maybe
 import Data.Maybe
 
-
-
-
---getResult vin = do
---  mResult <- runMaybeT $ getLandRegister2 vin
---  return mResult
-{--
-fancyEnvInfo :: MaybeT IO (Maybe String)
-fancyEnvInfo = do
-  editor <- lift (lookupEnv "EDITOR")
-  lang <- lift (lookupEnv "LANG")
-  term <- lift (lookupEnv "TERM")
-  --let result = (editor, lang, term)
-  --lift (putStrLn ("Got result " ++ (show result)))
-  return $ maybe editor
---}
---  maybe mzero pure <=< lift . System.Environment.lookupEnv
-
---getLandRegister2 :: T.Text -> IO (Maybe LandRegister)
-getLandRegister2 vin = do
+-- Using the MaybeT monad transformer
+-- https://hackage.haskell.org/package/transformers-0.5.1.0/docs/Control-Monad-Trans-Maybe.html
+getLandRegister :: T.Text -> IO (Maybe LandRegister)
+getLandRegister vin = do
 --getLandRegister vin = do
   --manager <- newManager tlsManagerSettings
   manager <- newManager tlsManagerSettings
-  putStrLn "Doing first request..."
-  a1 <- doFstRequest manager
-  let Just (_afPfm, viewState1, cookieList1) = a1
-  a2 <- doSndRequest manager _afPfm viewState1 cookieList1
-  let Just (_afPfm2, cookieList2) = a2
-  a3 <- doTrdRequest manager vin _afPfm2 viewState1 cookieList2
-  let Just (viewState2, rangeStart, listItemValue, cookieList3) = a3
-  a4 <- doFrthRequest manager _afPfm2 rangeStart viewState2 listItemValue cookieList3
-  let (html, cookieList4) = a4
-  return $ Just $ initLandRegister (Just vin) html
+  putStrLn "Doing requests..."
+  runMaybeT $ do
+    (_afPfm, viewState1, cookieList1) <- MaybeT $ doFstRequest manager
+    (_afPfm2, cookieList2) <- MaybeT $ doSndRequest manager _afPfm viewState1 cookieList1
+    (viewState2, rangeStart, listItemValue, cookieList3) <- MaybeT $ doTrdRequest manager vin _afPfm2 viewState1 cookieList2
+    (html, cookieList4) <- MaybeT $ doFrthRequest manager _afPfm2 rangeStart viewState2 listItemValue cookieList3
+    return $ initLandRegister (Just vin) html
 
-getLandRegister :: T.Text -> IO (Maybe LandRegister)
+-- Stairs model
+getLandRegister2 :: T.Text -> IO (Maybe LandRegister)
 --getLandRegister vin = withOpenSSL $ do
   --manager <- newManager $ opensslManagerSettings SSL.context
-getLandRegister vin = do
+getLandRegister2 vin = do
   manager <- newManager tlsManagerSettings
   putStrLn "Doing first request..."
   a1 <- doFstRequest manager
@@ -98,11 +79,11 @@ getLandRegister vin = do
               a4 <- doFrthRequest manager _afPfm2 rangeStart viewState2 listItemValue cookieList3
               -- a4 is also a redirect. 
               closeManager manager
-              let (html, cookieList4) = a4
+              let Just (html, cookieList4) = a4
               return $ Just $ initLandRegister (Just vin) html
+--}
 
-
-doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (T.Text, [Cookie])
+doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
 doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie = do
   let redirects = 1
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
@@ -124,7 +105,9 @@ doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie = do
         ("state", ""),
         ("value", ""),
         ("listItem", TE.encodeUtf8(listItemValue))]
-  doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (T.Text, [Cookie])
+  response <- doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (T.Text, [Cookie])
+  -- Just is added to make MaybeT work above. It seemed the cleanest way to proceed.
+  return $ Just $ response
 
 doTrdRequest :: Manager -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, T.Text, T.Text, [Cookie]))
 doTrdRequest manager vin _afPfm viewState cookie = do
