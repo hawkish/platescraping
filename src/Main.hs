@@ -63,7 +63,9 @@ searchUsingVin vin = do
   landRegister <- try $ getLandRegister (T.pack vin)
   case landRegister of
     Left ex -> return $ Left ex 
-    Right val -> return . Right . TL.toStrict . TLE.decodeUtf8 $ encode val
+    Right val -> case val of
+      Just val1 -> return . Right . TL.toStrict . TLE.decodeUtf8 $ encode val1
+      Nothing -> error "Ingen søgeresultat fra Tinglysning.dk"
 
 -- The rules in this wikipedia article is used.
 -- https://en.wikipedia.org/wiki/Vehicle_identification_number

@@ -20,7 +20,7 @@ getSurveyorRapports a = do
   -- In this case: (a -> IO(b)) -> [a] -> IO[b]
   -- No need to return because result is already in IO.
   if null a1
-    then error "Fejl på Trafikstyrelsen.dk."
+    then error "Ingen søgeresultat fra Trafikstyrelsen.dk."
     else mapM getSurveyorRapport a1
 
 getSurveyorLinks :: T.Text -> IO [T.Text]
