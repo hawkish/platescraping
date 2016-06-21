@@ -8,34 +8,35 @@ import Control.Monad.Trans
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
-import Utils (getOpenTags, dequote)
+import Utils (getOpenTags, dequote, getTagTexts)
 import Text.HTML.TagSoup (fromAttrib, Tag)
 import SurveyorRapportType (initSurveyorRapport, SurveyorRapport)
 
 getSurveyorRapports :: T.Text -> IO [SurveyorRapport]
 getSurveyorRapports a = do
-  -- Getting link(s) to the surveyor rapport(s).
-  a1 <- getSurveyorLinks a
-  -- Using mapM :: (a -> mb) -> [a] -> m[b]
-  -- In this case: (a -> IO(b)) -> [a] -> IO[b]
-  -- No need to return because result is already in IO.
-  if null a1
-    then error "Ingen søgeresultat fra Trafikstyrelsen.dk."
-    else mapM getSurveyorRapport a1
-
-getSurveyorLinks :: T.Text -> IO [T.Text]
-getSurveyorLinks a = do
-  -- Unwrap the IO result for a1.
   a1 <- getVINHTML a
-  return $ parseLinks a1
+    -- Getting link(s) to the surveyor rapport(s).
+  if isResult a1
+    then do
+    let a2 = parseSurveyorLinks a1
+    if null a2
+      then error "Fejl på Trafikstyrelsen.dk"
+           -- Using mapM :: (a -> mb) -> [a] -> m[b]
+           -- In this case: (a -> IO(b)) -> [a] -> IO[b]
+           -- No need to return because result is already in IO.
+      else mapM getSurveyorRapport a2
+    else error "Ingen søgeresultat fra Trafikstyrelsen.dk."
 
 getSurveyorRapport :: T.Text -> IO SurveyorRapport
 getSurveyorRapport a = do
   a1 <- getSurveyorHTML a
   return $ initSurveyorRapport a1
 
-parseLinks :: T.Text -> [T.Text]
-parseLinks = filterLink . splitAtQuote . filterLocationHref . getOnClick . getOpenTags
+isResult :: T.Text -> Bool
+isResult = null . filter (T.isInfixOf "Ingen resultater") . getTagTexts
+
+parseSurveyorLinks :: T.Text -> [T.Text]
+parseSurveyorLinks = filterLink . splitAtQuote . filterLocationHref . getOnClick . getOpenTags
 
 filterLink :: [T.Text] -> [T.Text]
 filterLink = filter (T.isInfixOf "/Sider") 
