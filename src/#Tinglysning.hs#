@@ -7,11 +7,11 @@ import Text.HTML.TagSoup (parseTags, (~==), fromAttrib, isTagOpenName)
 import Network.HTTP.Client
 
 --Linux
---import Network.HTTP.Client.OpenSSL
---import qualified OpenSSL.Session as SSL
+import Network.HTTP.Client.OpenSSL
+import qualified OpenSSL.Session as SSL
 
 --OSX
-import Network.HTTP.Client.TLS
+--import Network.HTTP.Client.TLS
 
 import Network.HTTP.Types.Header
 
@@ -30,10 +30,10 @@ import Data.Maybe
 -- Using the MaybeT monad transformer to handle IO(Maybe a)
 -- https://hackage.haskell.org/package/transformers-0.5.1.0/docs/Control-Monad-Trans-Maybe.html
 getLandRegister :: T.Text -> IO (Maybe LandRegister)
-getLandRegister vin = do
-  manager <- newManager tlsManagerSettings
---getLandRegister vin = withOpenSSL $ do
-  --manager <- newManager $ opensslManagerSettings SSL.context
+--getLandRegister vin = do
+  --manager <- newManager tlsManagerSettings
+getLandRegister vin = withOpenSSL $ do
+  manager <- newManager $ opensslManagerSettings SSL.context
   putStrLn "Doing requests..."
   runMaybeT $ do
     -- Transforming Maybe to MaybeT and drawing values from IO

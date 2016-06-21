@@ -31,19 +31,13 @@ main = scotty 3000 $ do
 
   get "/1.0/vin/:vin" $ do
     vin <- param "vin"
-    if validateVIN vin
-      then do 
-      result <- liftIO $ searchUsingVin vin
-      case result of
-        Left ex -> do
-          status status404
-          json $ errorJSON "404" $ show ex
-        Right val -> json val
-      else do
-      status status404
-      json $ errorJSON "404" "Ikke et gyldigt stel nummer."
+    result <- liftIO $ searchUsingVin vin
+    case result of
+      Left ex -> do
+        status status404
+        json $ errorJSON "404" $ show ex
+      Right val -> json val
      
-
   notFound $ do
     status status404
     json $ errorJSON "404" "Kan ikke finde servicen."
@@ -62,10 +56,10 @@ searchUsingVin :: String -> IO (Either SomeException T.Text)
 searchUsingVin vin = do
   landRegister <- try $ getLandRegister (T.pack vin)
   case landRegister of
-    Left ex -> return $ Left ex 
+    Left ex -> return $ Left ex
     Right val -> case val of
       Just val1 -> return . Right . TL.toStrict . TLE.decodeUtf8 $ encode val1
-      Nothing -> error "Ingen søgeresultat fra Tinglysning.dk"
+      Nothing -> return $ Left $ error "Fejl på Tinglysning.dk"
 
 -- The rules in this wikipedia article is used.
 -- https://en.wikipedia.org/wiki/Vehicle_identification_number

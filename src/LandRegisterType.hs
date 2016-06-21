@@ -48,7 +48,7 @@ instance ToJSON AdditionalText
 instance ToJSON Creditor
 instance ToJSON Debtor
 
-initLandRegister :: Maybe T.Text -> T.Text -> LandRegister
+initLandRegister :: T.Text -> T.Text -> LandRegister
 initLandRegister vin a = MkLandRegister { _motorregister = initMotorregister vin a, _document = initDocument a, _creditor = initCreditor a, _debtor = initDebtor a, _additionalText = initAdditionalText a }
 
 initCreditor :: T.Text -> Creditor
@@ -78,11 +78,11 @@ initDocument a = MkDocument { _date = getTextAfter (T.pack "Dato/løbenummer:") 
                             , _principal = getTextAfter (T.pack "Hovedstol:") a
                             , _rateOfInterest = getTextAfter (T.pack "Rentesats:") a }
 
-initMotorregister :: Maybe T.Text -> T.Text -> Motorregister
+initMotorregister :: T.Text -> T.Text -> Motorregister
 initMotorregister vin a = MkMotorregister { _brand = getTextAfter (T.pack "Mærke:") a
                                           , _year = getTextAfter (T.pack "Årgang:") a
                                           , _license = getTextAfter (T.pack "Registreringsnummer:") a
-                                          , _vin = vin }
+                                          , _vin = Just vin }
 
 initAdditionalText :: T.Text -> AdditionalText
 initAdditionalText a = MkAdditionalText { _text = getAdditionalText a }
