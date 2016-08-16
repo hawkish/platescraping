@@ -2,3 +2,4 @@ dist/
 --list-options
 cabal.sandbox.config
 .DS_Store
+.stack-work

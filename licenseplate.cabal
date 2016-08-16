@@ -6,28 +6,28 @@ cabal-version:     >= 1.2
 executable licenseplate
   main-is:         Main.hs
   hs-source-dirs:  src
-  build-depends:   HTTP==4000.2.20
-                 , aeson==0.9.0.1
+  build-depends:   HTTP>=4000.3.3
+                 , aeson>=0.11.2.1
                  , base>=4.7
-                 , bytestring==0.10.6.0
-                 , cgi==3001.2.2.2
-                 , conduit==1.2.4.2
-                 , connection==0.2.5
-                 , errors==2.1.2
-                 , http-client==0.4.15
-                 , http-types==0.8.6
-                 , mtl==2.2.1
-                 , multipart==0.1.2
-                 , network==2.6.0.2
+                 , bytestring>=0.10.6.0
+                 , cgi>=3001.3.0.1
+                 , conduit>=1.2.7
+                 , connection>=0.2.6
+                 , errors>=2.1.2
+                 , http-client>=0.4.31
+                 , http-types>=0.8.6
+                 , mtl>=2.2.1
+                 , multipart>=0.1.2
+                 , network>=2.6.0.2
                  , scotty>=0.10.1
-                 , split==0.1.2.3
-                 , tagsoup==0.13.3
-                 , text==1.2.1.1
-                 , time==1.5.0.1
+                 , split>=0.1.2.3
+                 , tagsoup>=0.13.3
+                 , text>=1.2.1.1
+                 , time>=1.5.0.1
                  , transformers>=0.2.2
 -- Linux
-                 , HsOpenSSL==0.11.1.1
-                 , http-client-openssl==0.2.0.0
+                 , HsOpenSSL>=0.11.1.1
+                 , http-client-openssl>=0.2.0.0
 -- OSX
                  --, http-client-tls==0.2.0.0
   ghc-options: -O2 -Wall -threaded -rtsopts
