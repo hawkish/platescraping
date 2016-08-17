@@ -27,7 +27,6 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 import Data.Maybe
 
-
 -- Using the MaybeT monad transformer to handle IO(Maybe a)
 -- https://hackage.haskell.org/package/transformers-0.5.1.0/docs/Control-Monad-Trans-Maybe.html
 getLandRegister :: T.Text -> IO (Maybe LandRegister)
@@ -47,7 +46,6 @@ getLandRegister vin = withOpenSSL $ do
     -- return :: Monad m => a -> m a
     -- runMaybeT :: MaybeT m a -> m (Maybe a)
     return $ initLandRegister vin html
-
 
 doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
 doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie = do
@@ -104,7 +102,7 @@ doTrdRequest manager vin _afPfm viewState cookie = do
   -- Where I can finally check for the no search result.
   if isResult $ fst response
     then return $ procTrdResponse response
-    else error $ "Ingen søgeresultat fra Tinglysning.dk."
+    else error "Ingen søgeresultat fra Tinglysning.dk."
 
 isResult :: T.Text -> Bool
 isResult = null . filter (T.isInfixOf "Bilen er hverken registreret i e-TL eller DMR.") . getTagTexts

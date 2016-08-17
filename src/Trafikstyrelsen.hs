@@ -19,12 +19,11 @@ getSurveyorRapports a = do
   if isResult a1
     then do
     let a2 = parseSurveyorLinks a1
-    if null a2
-      then error "Fejl på Trafikstyrelsen.dk"
-           -- Using mapM :: (a -> mb) -> [a] -> m[b]
-           -- In this case: (a -> IO(b)) -> [a] -> IO[b]
-           -- No need to return because result is already in IO.
-      else mapM getSurveyorRapport a2
+    -- Using mapM :: (a -> mb) -> [a] -> m[b]
+    -- In this case: (a -> IO(b)) -> [a] -> IO[b]
+    -- No need to return because result is already in IO.
+    -- This return an empty [] if no SurveyorRapport is found.
+    mapM getSurveyorRapport a2
     else error "Ingen søgeresultat fra Trafikstyrelsen.dk."
 
 getSurveyorRapport :: T.Text -> IO SurveyorRapport
