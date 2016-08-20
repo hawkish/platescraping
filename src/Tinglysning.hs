@@ -101,10 +101,7 @@ doTrdRequest manager vin _afPfm viewState cookie = do
         ("javax.faces.ViewState", TE.encodeUtf8(viewState)),
         ("source","content:center:bilbogen:j_id150")]
   response <- doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (T.Text, [Cookie])
-  -- Where I can finally check for the no search result.
-  if isResult $ fst response
-    then return $ procTrdResponse response
-    else error $ "Ingen søgeresultat fra Tinglysning.dk."
+  return $ procTrdResponse response
 
 isResult :: T.Text -> Bool
 isResult = null . filter (T.isInfixOf "Bilen er hverken registreret i e-TL eller DMR.") . getTagTexts
