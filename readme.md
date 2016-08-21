@@ -5,6 +5,21 @@ This is a screenscraper of the danish sites trafikstyrelsen.dk and tinglysning.d
 
 I'm using Haskell and TagSoup for the job. Works fine for now.
 
+*Not* using Network.HTTP.Client.TLS - that lib was full of bugs - but Network.HTTP.Client.OpenSSL.
+
+To build with OpenSSL headers on Mac OSX Capitan you need these steps:
+
+brew update
+brew install openssl
+cd /usr/local/include
+ln -s ../opt/openssl/include/openssl .
+
+- and finally you need these includes and libs added to stack.yaml:
+
+extra-include-dirs:
+- /usr/local/opt/openssl/include
+extra-lib-dirs:
+- /usr/local/opt/openssl/lib
 
 Acknowledgements
 ----------------

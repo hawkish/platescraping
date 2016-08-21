@@ -10,9 +10,6 @@ import Network.HTTP.Client
 import Network.HTTP.Client.OpenSSL
 import qualified OpenSSL.Session as SSL
 
---OSX
---import Network.HTTP.Client.TLS
-
 import Network.HTTP.Types.Header
 
 import Data.List
@@ -31,8 +28,6 @@ import Data.Maybe
 -- Using the MaybeT monad transformer to handle IO(Maybe a)
 -- https://hackage.haskell.org/package/transformers-0.5.1.0/docs/Control-Monad-Trans-Maybe.html
 getLandRegister :: T.Text -> IO (Maybe LandRegister)
---getLandRegister vin = do
-  --manager <- newManager tlsManagerSettings
 getLandRegister vin = withOpenSSL $ do
   manager <- newManager $ opensslManagerSettings SSL.context
   putStrLn "Doing requests..."
@@ -47,7 +42,6 @@ getLandRegister vin = withOpenSSL $ do
     -- return :: Monad m => a -> m a
     -- runMaybeT :: MaybeT m a -> m (Maybe a)
     return $ initLandRegister vin html
-
 
 doFrthRequest :: Manager -> T.Text -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [Cookie]))
 doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie = do
