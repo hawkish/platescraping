@@ -57,9 +57,7 @@ searchUsingVin vin = do
   landRegister <- try $ getLandRegister (T.pack vin)
   case landRegister of
     Left ex -> return $ Left ex
-    Right val -> case val of
-      Just val1 -> return . Right . TL.toStrict . TLE.decodeUtf8 $ encode val1
-      Nothing -> return $ Left $ error "Fejl på Tinglysning.dk"
+    Right val -> return . Right . TL.toStrict . TLE.decodeUtf8 $ encode val
 
 -- The rules in this wikipedia article is used.
 -- https://en.wikipedia.org/wiki/Vehicle_identification_number

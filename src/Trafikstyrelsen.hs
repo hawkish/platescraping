@@ -16,15 +16,12 @@ getSurveyorRapports :: T.Text -> IO [SurveyorRapport]
 getSurveyorRapports a = do
   a1 <- getVINHTML a
     -- Getting link(s) to the surveyor rapport(s).
-  if isResult a1
-    then do
-    let a2 = parseSurveyorLinks a1
-    -- Using mapM :: (a -> mb) -> [a] -> m[b]
-    -- In this case: (a -> IO(b)) -> [a] -> IO[b]
-    -- No need to return because result is already in IO.
-    -- This return an empty [] if no SurveyorRapport is found.
-    mapM getSurveyorRapport a2
-    else error "Ingen søgeresultat fra Trafikstyrelsen.dk."
+  let a2 = parseSurveyorLinks a1
+  -- Using mapM :: (a -> mb) -> [a] -> m[b]
+  -- In this case: (a -> IO(b)) -> [a] -> IO[b]
+  -- No need to return because result is already in IO.
+  -- This returns an empty [] if no SurveyorRapport is found.
+  mapM getSurveyorRapport a2
 
 getSurveyorRapport :: T.Text -> IO SurveyorRapport
 getSurveyorRapport a = do
