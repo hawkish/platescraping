@@ -6,7 +6,6 @@ module Tinglysning (getLandRegister) where
 import Text.HTML.TagSoup (parseTags, (~==), fromAttrib, isTagOpenName)
 import Network.HTTP.Client
 
---Linux
 import Network.HTTP.Client.OpenSSL
 import qualified OpenSSL.Session as SSL
 
@@ -18,7 +17,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
-import Utils (getParameterAt, getElementAt, getTagTexts)
+import Utils (getParameterAt, getElementAt)
 import LandRegisterType (initLandRegister, LandRegister)
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
@@ -48,7 +47,7 @@ doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie = do
   let redirects = 1
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogenresults.xhtml"
   let referer = url `T.append` (T.pack "?") `T.append` _afPfm
-  let requestHeaders = [
+  let headers = [
           ("Host","www.tinglysning.dk"),
           ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
           ("Accept", "text/html,application/xhtml+xml;application/xml;q=0.9,*/*;q=0.8"),
@@ -65,7 +64,7 @@ doFrthRequest manager _afPfm rangeStart viewState listItemValue cookie = do
         ("state", ""),
         ("value", ""),
         ("listItem", TE.encodeUtf8(listItemValue))]
-  response <- doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (T.Text, [Cookie])
+  response <- doPostRequest manager url headers body _afPfm cookie redirects :: IO (T.Text, [Cookie])
   -- Just is added to make MaybeT work above. It seemed the cleanest way to proceed.
   return $ Just $ response
 
@@ -73,7 +72,7 @@ doTrdRequest :: Manager -> T.Text -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (
 doTrdRequest manager vin _afPfm viewState cookie = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
   let redirects = 1
-  let requestHeaders = [
+  let headers = [
           ("Host","www.tinglysning.dk"),
           ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
           ("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
@@ -94,11 +93,11 @@ doTrdRequest manager vin _afPfm viewState cookie = do
         ("_noJavaScript", "false"),
         ("javax.faces.ViewState", TE.encodeUtf8(viewState)),
         ("source","content:center:bilbogen:j_id150")]
-  response <- doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (T.Text, [Cookie])
+  response <- doPostRequest manager url headers body _afPfm cookie redirects :: IO (T.Text, [Cookie])
   return $ procTrdResponse response
 
-isResult :: T.Text -> Bool
-isResult = null . filter (T.isInfixOf "Bilen er hverken registreret i e-TL eller DMR.") . getTagTexts
+--isResult :: T.Text -> Bool
+--isResult = null . filter (T.isInfixOf "Bilen er hverken registreret i e-TL eller DMR.") . getTagTexts
 
 procTrdResponse ::  (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, T.Text, [Cookie])
 procTrdResponse response = do
@@ -113,7 +112,7 @@ doSndRequest :: Manager -> T.Text -> T.Text -> [Cookie] -> IO (Maybe (T.Text, [C
 doSndRequest manager _afPfm viewState cookie = do
   let redirects = 1
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
-  let requestHeaders = [
+  let headers = [
           ("Host","www.tinglysning.dk"),
           ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
           ("Accept", "text/html,application/xhtml+xml;application/xml;q=0.9,*/*;q=0.8"),
@@ -137,7 +136,7 @@ doSndRequest manager _afPfm viewState cookie = do
         ("source","content:center:bilbogen:stelnrOption"),
         ("event","autosub"),
         ("partial","true")]
-  response <- doPostRequest manager url requestHeaders body _afPfm cookie redirects :: IO (T.Text, [Cookie])
+  response <- doPostRequest manager url headers body _afPfm cookie redirects :: IO (T.Text, [Cookie])
   return $ procSndResponse response
 
 procSndResponse :: (T.Text, [Cookie]) -> Maybe (T.Text, [Cookie])
@@ -150,12 +149,12 @@ procSndResponse response = do
 doFstRequest :: Manager -> IO (Maybe (T.Text, T.Text, [Cookie]))
 doFstRequest manager = do
   let url = T.pack "https://www.tinglysning.dk/tinglysning/forespoerg/bilbogen/bilbogen.xhtml"
-  let requestHeaders = [
+  let headers = [
           ("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0"),
           ("Accept", "text/html,application/xhtml+xml;application/xml;q=0.9,*/*;q=0.8"),
           ("Accept-Language", "en-GB,en;q=0.5"),
           ("Connection", "keep-alive")]
-  response <- doGetRequest manager url requestHeaders :: IO (T.Text, [Cookie])
+  response <- doGetRequest manager url headers :: IO (T.Text, [Cookie])
   return $ procFstResponse response
 
 procFstResponse :: (T.Text, [Cookie]) -> Maybe (T.Text, T.Text, [Cookie])
@@ -184,10 +183,10 @@ filterInputRangeStart = fmap (fromAttrib "value") . listToMaybe . filter (~== ("
 getListItemValue :: T.Text -> Maybe T.Text
 getListItemValue a = do
   a1 <- filterAnchor a
-  let elem = T.splitOn "'" a1
-  indexListItem <- elemIndex "listItem" elem
+  let element = T.splitOn "'" a1
+  indexListItem <- elemIndex "listItem" element
   let indexListItemValue = indexListItem + 2
-  a2 <- getElementAt elem indexListItemValue
+  a2 <- getElementAt element indexListItemValue
   return a2
 
 doGetRequest :: Manager -> T.Text -> RequestHeaders -> IO (T.Text, [Cookie])
@@ -200,8 +199,8 @@ doGetRequest manager url requestHeadersList = do
         , responseTimeout = Just 100000000
         }
   resp <- httpLbs req manager
-  let cookieJar = responseCookieJar resp
-  let cookieList = destroyCookieJar cookieJar
+  let c = responseCookieJar resp
+  let cookieList = destroyCookieJar c
   return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp, cookieList)
 
 doPostRequest :: Manager -> T.Text -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> T.Text -> [Cookie] -> Int -> IO (T.Text, [Cookie])
@@ -218,7 +217,7 @@ doPostRequest manager baseUrl requestHeadersList body _afPfm cookie redirects = 
         }
   let req = urlEncodedBody body $ req'
   resp <- httpLbs req manager 
-  let cookieJar = responseCookieJar resp
-  let cookieList = destroyCookieJar cookieJar
+  let c = responseCookieJar resp
+  let cookieList = destroyCookieJar c
   return (TL.toStrict $ TLE.decodeUtf8 $ responseBody resp, cookieList)
   
