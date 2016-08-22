@@ -30,5 +30,5 @@ executable licenseplate
                  , http-client-openssl>=0.2.0.0
 -- OSX
                  --, http-client-tls>=0.2.0.0
-  ghc-options: -O2 -Wall -threaded -rtsopts
+  ghc-options: -O2 -threaded -rtsopts
 

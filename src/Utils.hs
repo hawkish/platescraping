@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Utils (getElementAfter, getElementsAfter, getParameterAt, getElementAt, getTagStrings, getOpenTags, dequote, extractText, getTextAfter, getTagTexts, getTextsAfter, getTextAfterAt, deleteEveryNth, unescapeJSONText, fst3, snd3, thd3) where
 
-import Data.List.Split
+--import Data.List.Split
 import Data.List (elemIndex, elemIndices) 
 import Data.Maybe
 import qualified Data.Text as T
@@ -60,13 +60,15 @@ getElementAt a n = if n > length a - 1
                       then Nothing
                       else Just $ a !! n
 
+{--
 getCookie :: String -> Maybe String
 getCookie a = do
   a1 <- listToMaybe . drop 1 $ splitOn ";" a
   a2 <- listToMaybe $ splitOn "?" a1
   a3 <- listToMaybe . drop 1 $ splitOn "=" a2
   return a3
-                                
+--}
+
 -- Take all relevant tagTexts from the HTML tag soup. Yeah, it's a convoluted process...
 getTagStrings :: String -> [String]
 getTagStrings = map T.unpack . dequote . getTagTexts . T.pack

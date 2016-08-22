@@ -191,7 +191,7 @@ getListItemValue a = do
 
 doGetRequest :: Manager -> T.Text -> RequestHeaders -> IO (T.Text, [Cookie])
 doGetRequest manager url requestHeadersList = do
-  initReq <- liftIO $ parseUrl $ T.unpack url
+  initReq <- liftIO $ parseRequest $ T.unpack url
   let req = initReq {
         secure = True
         , method = "GET"
@@ -206,7 +206,7 @@ doGetRequest manager url requestHeadersList = do
 doPostRequest :: Manager -> T.Text -> RequestHeaders -> [(B.ByteString, B.ByteString)] -> T.Text -> [Cookie] -> Int -> IO (T.Text, [Cookie])
 doPostRequest manager baseUrl requestHeadersList body _afPfm cookie redirects = do
   let url = baseUrl `T.append` (T.pack "?") `T.append` _afPfm
-  initReq <- liftIO $ parseUrl $ T.unpack url
+  initReq <- liftIO $ parseRequest $ T.unpack url
   let req' = initReq {
         secure = True
         , method = "POST"

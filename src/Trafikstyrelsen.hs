@@ -8,7 +8,7 @@ import Control.Monad.Trans
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
 import qualified Data.Text.Lazy as TL
-import Utils (getOpenTags, dequote, getTagTexts)
+import Utils (getOpenTags, dequote)
 import Text.HTML.TagSoup (fromAttrib, Tag)
 import SurveyorRapportType (initSurveyorRapport, SurveyorRapport)
 
@@ -28,8 +28,8 @@ getSurveyorRapport a = do
   a1 <- getSurveyorHTML a
   return $ initSurveyorRapport a1
 
-isResult :: T.Text -> Bool
-isResult = null . filter (T.isInfixOf "Ingen resultater") . getTagTexts
+--isResult :: T.Text -> Bool
+--isResult = null . filter (T.isInfixOf "Ingen resultater") . getTagTexts
 
 parseSurveyorLinks :: T.Text -> [T.Text]
 parseSurveyorLinks = filterLink . splitAtQuote . filterLocationHref . getOnClick . getOpenTags
@@ -64,7 +64,7 @@ getSurveyorHTML a = do
 
 doGetRequest :: Manager -> T.Text -> IO T.Text
 doGetRequest manager url = do
-  initReq <- liftIO $ parseUrl $ T.unpack url
+  initReq <- liftIO $ parseRequest $ T.unpack url
   let req = initReq {
         method = "GET"
         }
