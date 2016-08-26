@@ -2,6 +2,8 @@
 
 import Trafikstyrelsen (getSurveyorRapports)
 import Tinglysning (getLandRegister)
+import LandRegisterType
+import SurveyorRapportType
 import Data.Char
 import qualified Data.Text as T
 import qualified Data.Text.Lazy.Encoding as TLE
@@ -15,49 +17,26 @@ import Control.Exception
 
 main :: IO ()
 main = scotty 3000 $ do
-
   get "/" $ do
     status status403
     json $ errorJSON "403" "Forbidden."
   
   get "/1.0/registrationnumber/:rn" $ do
     rn <- param "rn"
-    result <- liftIO $ searchUsingReg rn
-    case result of
-      Left ex -> do
-        status status404
-        json $ errorJSON "404" $ show ex
-      Right val -> json val
+    result <- liftIO $ getSurveyorRapports $ T.pack rn
+    json result
 
   get "/1.0/vin/:vin" $ do
     vin <- param "vin"
-    result <- liftIO $ searchUsingVin vin
-    case result of
-      Left ex -> do
-        status status404
-        json $ errorJSON "404" $ show ex
-      Right val -> json val
-     
+    result <- liftIO $ getLandRegister $ T.pack vin
+    json result
+
   notFound $ do
     status status404
     json $ errorJSON "404" "Kan ikke finde servicen."
 
 errorJSON :: String -> String -> TL.Text
 errorJSON a b = TLE.decodeUtf8 $ encode $ initError (T.pack a) (T.pack b)
-
-searchUsingReg :: String -> IO (Either SomeException T.Text)
-searchUsingReg reg = do
-  surveyorRapports <- try $ getSurveyorRapports (T.pack reg)
-  case surveyorRapports of
-    Left ex -> return $ Left ex
-    Right val -> return . Right . TL.toStrict . TLE.decodeUtf8 $ encode val
-  
-searchUsingVin :: String -> IO (Either SomeException T.Text)
-searchUsingVin vin = do
-  landRegister <- try $ getLandRegister (T.pack vin)
-  case landRegister of
-    Left ex -> return $ Left ex
-    Right val -> return . Right . TL.toStrict . TLE.decodeUtf8 $ encode val
 
 -- The rules in this wikipedia article is used.
 -- https://en.wikipedia.org/wiki/Vehicle_identification_number
