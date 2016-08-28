@@ -2,6 +2,7 @@
 
 import Trafikstyrelsen (getSurveyorRapports)
 import Tinglysning (getLandRegister)
+import ErrorType
 import LandRegisterType
 import SurveyorRapportType
 import Data.Char
@@ -39,13 +40,12 @@ main = scotty 3000 $ do
         json $ errorJSON "404" $ show ex
       Right val -> json val
 
-
   notFound $ do
     status status404
     json $ errorJSON "404" "Kan ikke finde servicen."
 
-errorJSON :: String -> String -> TL.Text
-errorJSON a b = TLE.decodeUtf8 $ encode $ initError (T.pack a) (T.pack b)
+errorJSON :: String -> String -> Error
+errorJSON a b = initError (T.pack a) (T.pack b)
 
 searchUsingReg :: String -> IO (Either SomeException [SurveyorRapport])
 searchUsingReg reg = do
