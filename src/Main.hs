@@ -23,13 +23,22 @@ main = scotty 3000 $ do
   
   get "/1.0/registrationnumber/:rn" $ do
     rn <- param "rn"
-    result <- liftIO $ getSurveyorRapports $ T.pack rn
-    json result
+    result <- liftIO $ searchUsingReg rn
+    case result of
+      Left ex -> do
+        status status404
+        json $ errorJSON "404" $ show ex
+      Right val -> json val
 
   get "/1.0/vin/:vin" $ do
     vin <- param "vin"
-    result <- liftIO $ getLandRegister $ T.pack vin
-    json result
+    result <- liftIO $ searchUsingVin vin
+    case result of
+      Left ex -> do
+        status status404
+        json $ errorJSON "404" $ show ex
+      Right val -> json val
+
 
   notFound $ do
     status status404
@@ -37,6 +46,16 @@ main = scotty 3000 $ do
 
 errorJSON :: String -> String -> TL.Text
 errorJSON a b = TLE.decodeUtf8 $ encode $ initError (T.pack a) (T.pack b)
+
+searchUsingReg :: String -> IO (Either SomeException [SurveyorRapport])
+searchUsingReg reg = do
+  surveyorRapports <- try $ getSurveyorRapports (T.pack reg)
+  return surveyorRapports
+
+searchUsingVin :: String -> IO (Either SomeException (Maybe LandRegister))
+searchUsingVin vin = do
+  landRegister <- try $ getLandRegister (T.pack vin)
+  return landRegister
 
 -- The rules in this wikipedia article is used.
 -- https://en.wikipedia.org/wiki/Vehicle_identification_number
