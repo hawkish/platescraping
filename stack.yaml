@@ -56,7 +56,8 @@ extra-package-dbs: []
 # 
 # Override the architecture used by stack, especially useful on Windows
 # arch: i386
-# arch: x86_64
+#arch: x86_64
+#os: osx, linux
 # 
 # Extra directories used by stack for building
 # extra-include-dirs: [/path/to/dir]
