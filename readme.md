@@ -5,21 +5,30 @@ This is a screenscraper of the danish sites trafikstyrelsen.dk and tinglysning.d
 
 I'm using Haskell and TagSoup for the job. Works fine for now.
 
-*Not* using Network.HTTP.Client.TLS - that lib was full of bugs - but Network.HTTP.Client.OpenSSL.
+I'm *not* using Network.HTTP.Client.TLS - that lib was full of bugs. I'm using Network.HTTP.Client.OpenSSL instead.
 
 To build with OpenSSL headers on Mac OSX Capitan you need these steps:
 
+```bash
 brew update
+```
+```bash
 brew install openssl
+```
+```bash
 cd /usr/local/include
+```
+```bash
 ln -s ../opt/openssl/include/openssl .
+```
+Finally you need these includes and libs added to stack.yaml:
 
-- and finally you need these includes and libs added to stack.yaml:
-
+```bash
 extra-include-dirs:
 - /usr/local/opt/openssl/include
 extra-lib-dirs:
 - /usr/local/opt/openssl/lib
+```
 
 Acknowledgements
 ----------------
@@ -33,10 +42,10 @@ Installation
 This runs as a REST service on Scotty. Just do a:
 
 ```bash
-cabal build
+stack build
 ```
 
-- and then run the resulting program.
+- and then run the resulting platescraping-exe program.
 
 NOTE: A separate project runs the program in a docker container. See platedocker for build instructions.
 
