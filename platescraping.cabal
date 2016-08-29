@@ -1,0 +1,68 @@
+name:                platescraping
+version:             0.1.0.0
+synopsis:            Initial project template from stack
+description:         Please see README.md
+homepage:            https://github.com/hawkish/platescraping#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Morten Høgh
+maintainer:          mortenhogh@gmail.com
+copyright:           2016 Morten Høgh
+category:            Web
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Rest
+  other-modules:       ErrorType
+                     , LandRegisterType
+                     , SurveyorRapportType
+                     , Tinglysning
+                     , Trafikstyrelsen
+                     , Utils
+  build-depends:       base >= 4.7 && < 5
+                     , HTTP>=4000.3.3
+                     , aeson>=0.11.2.1
+                     , bytestring>=0.10.6.0
+                     , cgi>=3001.3.0.1
+                     , conduit>=1.2.7
+                     , connection>=0.2.6
+                     , errors>=2.1.2
+                     , http-client>=0.4.31
+                     , http-types>=0.8.6
+                     , mtl>=2.2.1
+                     , multipart>=0.1.2
+                     , network>=2.6.0.2
+                     , scotty>=0.10.1
+                     , split>=0.1.2.3
+                     , tagsoup>=0.13.3
+                     , text>=1.2.1.1
+                     , time>=1.5.0.1
+                     , transformers>=0.2.2
+                     , HsOpenSSL>=0.11.1.1
+                     , http-client-openssl>=0.2.0.0
+  default-language:    Haskell2010
+
+executable platescraping-exe
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , platescraping
+                     
+  default-language:    Haskell2010
+
+test-suite platescraping-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , platescraping
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/hawkish/platescraping

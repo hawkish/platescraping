@@ -1,5 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+module Rest
+  (
+    startREST
+  ) where
+
+
 import Trafikstyrelsen (getSurveyorRapports)
 import Tinglysning (getLandRegister)
 import ErrorType
@@ -16,8 +22,8 @@ import Data.Aeson (encode)
 import ErrorType (initError)
 import Control.Exception
 
-main :: IO ()
-main = scotty 3000 $ do
+startREST :: IO ()
+startREST = scotty 3000 $ do
   get "/" $ do
     status status403
     json $ errorJSON "403" "Forbidden."
