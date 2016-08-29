@@ -45,7 +45,7 @@ This runs as a REST service on Scotty. Just do a:
 stack build
 ```
 
-- and then run the resulting platescraping-exe program.
+... and then run the resulting platescraping-exe program.
 
 NOTE: A separate project runs the program in a docker container. See platedocker for build instructions.
 
